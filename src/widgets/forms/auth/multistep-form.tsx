@@ -11,6 +11,9 @@ import { StepDocuments } from "./steps/step-documents";
 import { StepAddress } from "./steps/step-address";
 import { StepProgress } from "./steps/step-progress";
 import { StepComplete } from "./steps/step-complete";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuthData } from "@/entities/auth/model/use-auth-store";
+import { useAuth } from "@/entities/auth/hooks/use-auth";
 
 // Определение типа для данных формы
 export interface RegisterFormData {
@@ -63,7 +66,7 @@ const Step2Schema = Yup.object().shape({
 });
 
 const Step3Schema = Yup.object().shape({
-  medicalCertificate: Yup.mixed(),
+  medicalCertificate: Yup.mixed().required("Медицинская справка обязательна"),
 });
 
 const Step4Schema = Yup.object().shape({
@@ -74,8 +77,11 @@ const Step4Schema = Yup.object().shape({
 
 export const MultiStepRegisterForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistrationComplete, setIsRegistrationComplete] = useState(false);
   const totalSteps = 4;
+
+  const { register, isRegistering } = useAuth();
+  const { toast } = useToast();
 
   // Инициализация формы с начальными значениями
   const formik = useFormik<RegisterFormData>({
@@ -110,14 +116,71 @@ export const MultiStepRegisterForm = () => {
         ? Step3Schema
         : Step4Schema,
     onSubmit: async (values) => {
-      setIsSubmitting(true);
-      console.log("Форма отправлена:", values);
+      // Проверяем наличие файла медицинской справки
+      if (!values.medicalCertificate) {
+        toast({
+          title: "Ошибка",
+          description: "Медицинская справка обязательна для регистрации",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Имитация API-запроса
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Подготавливаем массив заболеваний
+      // Убедимся, что diseases всегда массив строк
+      let diseases: string[] = [];
 
-      setIsSubmitting(false);
-      setCurrentStep(5); // Переход к экрану завершения
+      // Добавляем выбранные заболевания
+      if (Array.isArray(values.diseases)) {
+        diseases = [...values.diseases];
+      }
+
+      // Добавляем другое заболевание, если оно указано
+      if (values.otherDisease) {
+        diseases.push(values.otherDisease);
+      }
+
+      // Если массив пустой, добавим пустой массив
+      if (diseases.length === 0) {
+        diseases = [];
+      }
+
+      // Формируем данные для регистрации
+      const registerData = {
+        data: {
+          email: values.email,
+          phone: values.phone,
+          first_name: values.firstName,
+          last_name: values.lastName,
+          patronymic: values.middleName,
+          diseases: diseases, // Передаем подготовленный массив
+          password: values.password,
+        },
+        medDocFile: values.medicalCertificate,
+      };
+
+      // Вызываем мутацию регистрации с данными из формы
+      register(registerData, {
+        onSuccess: () => {
+          setIsRegistrationComplete(true);
+          setCurrentStep(5); // Переход к экрану завершения
+        },
+        onError: (error: any) => {
+          // Выводим детальную информацию об ошибке
+          console.error("Registration error:", error);
+
+          // Показываем уведомление с деталями ошибки
+          toast({
+            title: "Ошибка регистрации",
+            description:
+              error.response?.data?.message ||
+              (Array.isArray(error.response?.data?.message)
+                ? error.response.data.message.join(", ")
+                : "Произошла ошибка при регистрации"),
+            variant: "destructive",
+          });
+        },
+      });
     },
   });
 
@@ -225,7 +288,7 @@ export const MultiStepRegisterForm = () => {
               type="button"
               variant="outline"
               onClick={handlePrevStep}
-              disabled={currentStep === 1 || isSubmitting}
+              disabled={currentStep === 1 || isRegistering}
               className="min-w-[100px] h-10 text-sm font-medium"
             >
               Назад
@@ -261,10 +324,10 @@ export const MultiStepRegisterForm = () => {
               onClick={
                 currentStep === totalSteps ? formik.submitForm : handleNextStep
               }
-              disabled={isSubmitting}
+              disabled={isRegistering}
               className="min-w-[100px] h-10 text-sm font-medium bg-blue-500 hover:bg-blue-600"
             >
-              {isSubmitting ? (
+              {isRegistering ? (
                 <div className="flex items-center gap-2">
                   <motion.div
                     className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"

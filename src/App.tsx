@@ -1,3 +1,4 @@
+import type React from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import reactQueryClient from "./shared/api/queryClient";
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -22,7 +23,28 @@ import SparkFace from "./pages/spark-face/page";
 import ResultsPage from "./pages/spark-face-result/page";
 import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page";
 import ChatPage from "./pages/ai-messenger/page";
-import { DocumentsPage } from "./pages/documents/page";
+
+// Компонент для защищенных маршрутов
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token } = useAuthData();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Компонент для маршрутов аутентификации
+const AuthRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token } = useAuthData();
+
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   const { token } = useAuthData();
@@ -62,7 +84,62 @@ function App() {
 
   return (
     <QueryClientProvider client={reactQueryClient}>
-      <Routes>{renderRoutes()}</Routes>
+      <Routes>
+        {/* Маршруты аутентификации (доступны только неаутентифицированным пользователям) */}
+        <Route
+          path="/login"
+          element={
+            <AuthRoute>
+              <LoginPage />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <AuthRoute>
+              <RegisterPage />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <AuthRoute>
+              <ResetPasswordPage />
+            </AuthRoute>
+          }
+        />
+
+        {/* Публичные маршруты (доступны всем) */}
+        <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
+
+        {/* Защищенные маршруты (требуют аутентификации) */}
+        <Route path="/">
+          <Route index element={<DashboardPage />} />
+          <Route path="modules" element={<ModulesPage />} />
+          <Route path="modules/:moduleId" element={<ModulesPage />} />
+          <Route path="reminder" element={<RemindersPage />} />
+          <Route path="reminders/new" element={<NewReminderPage />} />
+          <Route path="stress-test" element={<StressTestPage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="ai-assistent" element={<ChatPage />} />
+          <Route path="clinics" element={<ClinicsPage />} />
+          <Route path="clinic/:id/doctors" element={<ClinicDoctors />} />
+          <Route path="hydration" element={<HydrationPage />} />
+          <Route path="sleep" element={<SleepPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="health-stats" element={<HealthStatsPage />} />
+          <Route path="spark-face" element={<SparkFace />} />
+          <Route path="spark-face-result" element={<ResultsPage />} />
+        </Route>
+
+        {/* Перенаправление для несуществующих маршрутов */}
+        <Route
+          path="*"
+          element={<Navigate to={token ? "/" : "/login"} replace />}
+        />
+      </Routes>
     </QueryClientProvider>
   );
 }

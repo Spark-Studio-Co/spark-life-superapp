@@ -3,10 +3,9 @@
 import type React from "react";
 
 import type { FormikProps } from "formik";
-import { Label } from "@/components/ui/label";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { FileUp, X, FileCheck, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { Upload, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegisterFormData } from "../multistep-form";
 
@@ -16,6 +15,37 @@ interface StepDocumentsProps {
 
 export const StepDocuments = ({ formik }: StepDocumentsProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    validateAndSetFile(file);
+  };
+
+  const validateAndSetFile = (file?: File) => {
+    setFileError(null);
+
+    if (!file) {
+      setFileError("Пожалуйста, выберите файл");
+      return;
+    }
+
+    // Проверяем тип файла (только PDF)
+    if (file.type !== "application/pdf") {
+      setFileError("Разрешены только PDF файлы");
+      return;
+    }
+
+    // Проверяем размер файла (максимум 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError("Размер файла не должен превышать 10MB");
+      return;
+    }
+
+    // Устанавливаем файл в formik
+    formik.setFieldValue("medicalCertificate", file);
+  };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -29,144 +59,131 @@ export const StepDocuments = ({ formik }: StepDocumentsProps) => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      handleFileChange(file);
-    }
+    const file = e.dataTransfer.files?.[0];
+    validateAndSetFile(file);
   };
 
-  const handleFileChange = (file: File) => {
-    // Проверка типа файла (PDF, DOC, DOCX, JPG, PNG)
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "image/jpeg",
-      "image/png",
-    ];
-
-    if (allowedTypes.includes(file.type)) {
-      formik.setFieldValue("medicalCertificate", file);
-    } else {
-      alert("Пожалуйста, загрузите файл в формате PDF, DOC, DOCX, JPG или PNG");
-    }
+  const handleClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFileChange(e.target.files[0]);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    formik.setFieldValue("medicalCertificate", null);
-  };
+  const selectedFile = formik.values.medicalCertificate;
 
   return (
-    <div className="space-y-6 py-2">
-      <div>
-        <h2 className="text-xl font-semibold">Медицинские документы</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Загрузите медицинскую справку или другие документы (опционально)
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 className="text-2xl font-bold mb-2">Загрузка документов</h2>
+        <p className="text-gray-500 mb-6">
+          Пожалуйста, загрузите медицинскую справку в формате PDF (до 10MB)
         </p>
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="medicalCertificate" className="text-sm font-medium">
-          Медицинская справка
-        </Label>
+        <div
+          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+            isDragging
+              ? "border-blue-500 bg-blue-50"
+              : fileError
+              ? "border-red-300 bg-red-50"
+              : selectedFile
+              ? "border-green-300 bg-green-50"
+              : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleClick}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="application/pdf"
+            onChange={handleFileChange}
+          />
 
-        {!formik.values.medicalCertificate ? (
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-muted-foreground/20"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <motion.div
-              className="flex flex-col items-center justify-center gap-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <FileUp className="h-10 w-10 text-muted-foreground" />
-              <p className="text-sm font-medium">
-                Перетащите файл сюда или{" "}
-                <label
-                  htmlFor="file-upload"
-                  className="text-primary cursor-pointer hover:underline"
+          <div className="flex flex-col items-center justify-center space-y-4">
+            {selectedFile ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-lg font-medium text-green-700">
+                    Файл загружен
+                  </p>
+                  <p className="text-sm text-gray-500">{selectedFile.name}</p>
+                  <p className="text-xs text-gray-400">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    formik.setFieldValue("medicalCertificate", null);
+                  }}
                 >
-                  выберите файл
-                </label>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Поддерживаемые форматы: PDF, DOC, DOCX, JPG, PNG (до 10 МБ)
-              </p>
-              <input
-                id="file-upload"
-                name="medicalCertificate"
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                onChange={handleFileInputChange}
-              />
-            </motion.div>
+                  Удалить файл
+                </Button>
+              </>
+            ) : fileError ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-lg font-medium text-red-700">Ошибка</p>
+                  <p className="text-sm text-red-500">{fileError}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFileError(null);
+                  }}
+                >
+                  Попробовать снова
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Upload className="w-8 h-8 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-lg font-medium">Перетащите файл сюда</p>
+                  <p className="text-sm text-gray-500">
+                    или нажмите для выбора
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Только PDF файлы (до 10MB)
+                  </p>
+                </div>
+              </>
+            )}
           </div>
-        ) : (
-          <motion.div
-            className="bg-muted/50 rounded-lg p-4 flex items-center justify-between"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 rounded-full p-2">
-                <FileCheck className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">
-                  {formik.values.medicalCertificate.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {(
-                    formik.values.medicalCertificate.size /
-                    1024 /
-                    1024
-                  ).toFixed(2)}{" "}
-                  МБ
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={handleRemoveFile}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Удалить файл</span>
-            </Button>
-          </motion.div>
-        )}
-      </div>
-
-      <div className="mt-6 p-4 bg-muted/50 rounded-lg flex gap-3">
-        <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-muted-foreground">
-          <p className="font-medium mb-1">Загрузка документов не обязательна</p>
-          <p>
-            Вы можете пропустить этот шаг и загрузить документы позже в личном
-            кабинете. Загруженные документы помогут нам предоставить более
-            персонализированные рекомендации.
-          </p>
         </div>
-      </div>
+
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-2">Требования к документу:</h3>
+          <ul className="list-disc list-inside space-y-1 text-gray-600">
+            <li>
+              Медицинская справка должна быть действительной (не просрочена)
+            </li>
+            <li>Документ должен содержать печать медицинского учреждения</li>
+            <li>Все страницы должны быть четко отсканированы</li>
+            <li>Файл должен быть в формате PDF</li>
+            <li>Размер файла не должен превышать 10MB</li>
+          </ul>
+        </div>
+      </motion.div>
     </div>
   );
 };
