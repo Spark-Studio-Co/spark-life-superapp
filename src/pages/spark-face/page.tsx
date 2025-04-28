@@ -56,15 +56,60 @@ export default function SparkFace() {
     fileInput.click();
   };
 
-  const processImage = () => {
+  const processImage = async () => {
     if (!selectedImage && !cameraActive) return;
 
     setIsProcessing(true);
 
-    setTimeout(() => {
+    try {
+      // Извлекаем base64 из dataURL
+      const base64Data = selectedImage?.split(",")[1];
+      if (!base64Data) throw new Error("Base64 image data is missing");
+
+      // Конвертируем base64 в blob
+      const blob = await (await fetch(selectedImage)).blob();
+
+      const formData = new FormData();
+      formData.append("img", blob, "photo.png"); // поле должно называться "img", как требует Skiniver
+
+      console.log("Отправка изображения в Skiniver API...");
+
+      const response = await fetch(
+        "https://spark-life-backend-production.up.railway.app/api/skiniver/predict",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      console.log("Статус ответа:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Ошибка API:", errorText);
+        throw new Error(`API request failed: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('Данные от Skiniver:', data);
+
+      localStorage.removeItem('skiniver_error');
+      localStorage.setItem('skiniver_result', JSON.stringify(data));
+
+      setIsProcessing(false);
+      navigate('/spark-face-result');
+
       setIsProcessing(false);
       navigate("/spark-face-result");
-    }, 2000);
+    } catch (error) {
+      console.error("Ошибка обработки изображения:", error);
+      setIsProcessing(false);
+
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      localStorage.setItem("skiniver_error", JSON.stringify({ message: errorMessage }));
+
+      navigate("/spark-face-result");
+    }
   };
 
   const capturePhoto = () => {
