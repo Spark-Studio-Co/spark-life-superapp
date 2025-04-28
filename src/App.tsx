@@ -4,6 +4,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import "./index.css";
 import { useAuthData } from "./entities/auth/model/use-auth-store";
 import { LoginPage } from "./pages/login/page";
+import { RegisterPage } from "./pages/register/page";
+import { ResetPasswordPage } from "./pages/reset-password/page";
 
 function App() {
   const { token } = useAuthData();
@@ -17,6 +19,8 @@ function App() {
       return (
         <>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </>
       );
