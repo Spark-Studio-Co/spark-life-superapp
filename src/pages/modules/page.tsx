@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Bell, Droplets, Mic, Search } from "lucide-react";
+import { Camera, Bell, Droplets, Mic, Search, Moon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { MainLayout } from "@/shared/ui/layout";
@@ -20,6 +20,14 @@ export const ModulesPage = () => {
       to: "/spark-face",
     },
     {
+      id: "sparkvoice",
+      title: "Анализ речи",
+      description: "Анализ речи на признаки депрессии",
+      icon: Mic,
+      color: "bg-rose-500",
+      to: "/spark-voice",
+    },
+    {
       id: "sparkremind",
       title: "Напоминания",
       description: "Умные напоминания о лекарствах с AI-предсказаниями",
@@ -36,12 +44,12 @@ export const ModulesPage = () => {
       to: "/hydration",
     },
     {
-      id: "sparkvoice",
-      title: "Анализ речи",
-      description: "Анализ речи на признаки депрессии",
-      icon: Mic,
-      color: "bg-rose-500",
-      to: "/spark-voice",
+      id: "sparksleep",
+      title: "Трекер сна",
+      description: 'Анализируйте качество сна и улучшайте своё самочувствие',
+      icon: Moon,
+      color: "bg-[#38bdf8]",
+      to: "/sleep",
     },
   ];
 

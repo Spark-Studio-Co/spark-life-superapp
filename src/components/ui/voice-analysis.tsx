@@ -16,7 +16,6 @@ const questions = [
   "Что приносит вам радость или помогает расслабиться?",
 ];
 
-// Интерфейс для аудиозаписей
 interface AudioRecording {
   url: string;
   blob: Blob;
@@ -149,13 +148,14 @@ export function VoiceAnalysis() {
           .forEach((track) => track.stop());
       }
 
-      // Даем возможность прослушать запись перед переходом к следующему вопросу
       setTimeout(() => {
         setIsProcessing(false);
 
-        // Добавляем кнопку для перехода к следующему вопросу вместо автоматического перехода
-        // Пользователь сможет прослушать запись и решить, когда идти дальше
-        // Переход к следующему шагу будет происходить при нажатии на сферу
+        if (currentStep < questions.length - 1) {
+          setCurrentStep(currentStep + 1); // Переход на следующий вопрос
+        } else {
+          submitRecordings([...recordings, { url: audioUrl, blob: audioBlob }]); // Или отправить если последний вопрос
+        }
       }, 1000);
     };
   };
@@ -305,10 +305,10 @@ export function VoiceAnalysis() {
                 <div
                   key={index}
                   className={`h-2 rounded-full flex-1 mx-1 ${index < currentStep
-                      ? "bg-primary"
-                      : index === currentStep
-                        ? "bg-primary/60"
-                        : "bg-muted"
+                    ? "bg-primary"
+                    : index === currentStep
+                      ? "bg-primary/60"
+                      : "bg-muted"
                     }`}
                 />
               ))}
