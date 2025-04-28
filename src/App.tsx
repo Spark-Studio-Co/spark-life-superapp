@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import "./index.css";
 import { useAuthData } from "./entities/auth/model/use-auth-store";
 import { LoginPage } from "./pages/login/page";
+import VoiceAnalysisPage from "./pages/voice-analysis/page";
 
 function App() {
   const { token } = useAuthData();
@@ -17,6 +18,7 @@ function App() {
       return (
         <>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/voice-analysis" element={<VoiceAnalysisPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </>
       );
