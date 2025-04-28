@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Droplet } from "lucide-react";
@@ -16,6 +14,7 @@ export const HydrationWidget = ({
   goal = 2500,
   initialValue = 500,
 }: HydrationWidgetProps) => {
+  const [hydration] = useState(initialValue);
   const [history] = useState([
     { date: "Пн", value: 1800 },
     { date: "Вт", value: 2100 },
