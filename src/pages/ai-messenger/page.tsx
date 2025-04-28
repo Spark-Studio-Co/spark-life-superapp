@@ -3,14 +3,7 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Send,
-  MoreVertical,
-  ArrowLeft,
-  Paperclip,
-  Mic,
-  ImageIcon,
-} from "lucide-react";
+import { Send, MoreVertical, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -195,22 +188,6 @@ export function AiMessengerPage() {
       {/* Input area */}
       <Card className="border-t p-3 rounded-none border-x-0 shadow-lg bg-white">
         <div className="flex items-end gap-2">
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-500 h-9 w-9"
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-500 h-9 w-9"
-            >
-              <ImageIcon className="h-5 w-5" />
-            </Button>
-          </div>
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
@@ -222,18 +199,12 @@ export function AiMessengerPage() {
               rows={1}
             />
           </div>
-          {inputValue.trim() ? (
-            <Button
-              onClick={handleSendMessage}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full h-10 w-10 flex items-center justify-center shadow-md"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          ) : (
-            <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full h-10 w-10 flex items-center justify-center shadow-md">
-              <Mic className="h-5 w-5" />
-            </Button>
-          )}
+          <Button
+            onClick={handleSendMessage}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full h-10 w-10 flex items-center justify-center shadow-md"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
       </Card>
     </div>
