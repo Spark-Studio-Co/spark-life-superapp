@@ -3,14 +3,21 @@
 import { motion } from "framer-motion";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCheck } from "lucide-react";
+import ava from "@/assets/avatar.png";
 
 interface MessageBubbleProps {
-  message: any;
+  message: {
+    id: string;
+    text: string;
+    sender: "user" | "ai";
+    timestamp: Date;
+    isRead?: boolean;
+  };
   isLast: boolean;
 }
 
 export function MessageBubble({ message, isLast }: MessageBubbleProps) {
-  const isUser = message.role === "user";
+  const isUser = message.sender === "user"; // Changed from message.role to message.sender
   const time = new Date(message.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -25,12 +32,12 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
     >
       {!isUser && (
         <Avatar className="h-8 w-8">
-          <img src="/digital-health-companion.png" alt="AI Assistant" />
+          <img src={ava} alt="AI Assistant" />
         </Avatar>
       )}
       {isUser && (
         <Avatar className="h-8 w-8 bg-blue-100">
-          <img src="/diverse-user-profiles.png" alt="User" />
+          <img src={ava} alt="User" />
         </Avatar>
       )}
       <div className="flex flex-col max-w-[80%]">
@@ -41,7 +48,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
               : "bg-gray-100 rounded-2xl rounded-tl-none"
           }`}
         >
-          {message.content}
+          {message.text} {/* Changed from message.content to message.text */}
         </div>
         <div
           className={`flex items-center text-xs text-gray-500 mt-1 ${

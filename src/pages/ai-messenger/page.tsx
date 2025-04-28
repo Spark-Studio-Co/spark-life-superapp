@@ -1,9 +1,10 @@
 "use client";
 
 import type React from "react";
+
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, MoreVertical, ArrowLeft } from "lucide-react";
+import { Send, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -11,9 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageBubble } from "@/entities/ai-assistant/ui/message-bubble";
 import { QuickPrompt } from "@/entities/ai-assistant/ui/quick-prompt";
 import { useAiAssistant } from "@/entities/ai-assistant/api/use-ai-assistant";
-import avatar from "@/assets/avatar.png";
 
-export function AiMessengerPage() {
+export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -61,17 +61,10 @@ export function AiMessengerPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-4 text-white flex items-center gap-3 shadow-md">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-4 text-white flex items-center gap-3 shadow-md">
         <Avatar className="h-10 w-10 border-2 border-white/30 shadow-inner">
           <img
-            src={avatar || "/placeholder.svg"}
+            src="/digital-health-companion.png"
             alt="AI Assistant"
             className="object-cover"
           />
@@ -95,7 +88,7 @@ export function AiMessengerPage() {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[url('/soft-geometric-weave.png')] bg-fixed bg-opacity-5">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50 to-white">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm">
             <motion.div
@@ -104,9 +97,9 @@ export function AiMessengerPage() {
               transition={{ duration: 0.5 }}
               className="mb-6"
             >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-4 mx-auto shadow-lg">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mb-4 mx-auto shadow-lg">
                 <img
-                  src={avatar || "/placeholder.svg"}
+                  src="/digital-health-companion.png"
                   alt="AI Health Assistant"
                   className="w-full rounded-full h-full object-cover"
                 />
@@ -135,19 +128,19 @@ export function AiMessengerPage() {
           </div>
         ) : (
           <div className="space-y-4 py-2">
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <MessageBubble
-                key={index}
+                key={message.id}
                 message={message}
-                isLast={index === messages.length - 1}
+                isLast={message.id === messages[messages.length - 1].id}
               />
             ))}
             {isTyping && (
               <div className="flex items-start gap-2">
                 <Avatar className="h-8 w-8">
-                  <img src={avatar || "/placeholder.svg"} alt="AI Assistant" />
+                  <img src="/digital-health-companion.png" alt="AI Assistant" />
                 </Avatar>
-                <div className="bg-gray-100 rounded-2xl rounded-tl-none p-3 px-4 max-w-[80%]">
+                <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-tl-none p-3 px-4 max-w-[80%]">
                   <div className="flex gap-1">
                     <motion.div
                       className="h-2 w-2 bg-gray-400 rounded-full"
@@ -195,13 +188,13 @@ export function AiMessengerPage() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Напишите сообщение..."
-              className="resize-none pr-10 min-h-[40px] max-h-[120px] py-2 rounded-2xl border-gray-200 focus:border-blue-300 focus:ring-blue-300"
+              className="resize-none pr-10 min-h-[40px] max-h-[120px] py-2 rounded-2xl border-gray-200 focus:border-indigo-300 focus:ring-indigo-300"
               rows={1}
             />
           </div>
           <Button
             onClick={handleSendMessage}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full h-10 w-10 flex items-center justify-center shadow-md"
+            className="bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-full h-10 w-10 flex items-center justify-center shadow-md"
           >
             <Send className="h-5 w-5" />
           </Button>
