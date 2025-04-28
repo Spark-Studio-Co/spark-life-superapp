@@ -288,7 +288,7 @@ export function DoctorPage() {
   return (
     <MainLayout>
       {/* Шапка с градиентом */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-400 px-4 pt-6 pb-6">
+      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-4 pt-6 pb-6">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-white mb-4 hover:bg-blue-500/20 rounded-lg px-2 py-1"

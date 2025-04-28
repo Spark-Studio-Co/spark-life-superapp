@@ -113,7 +113,7 @@ export const ModulesPage = () => {
 
   return (
     <MainLayout>
-      <div className="bg-blue-500 px-4 pt-6 pb-6">
+      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-4 pt-6 pb-6">
         <h1 className="text-2xl font-bold text-white">Все модули</h1>
         <p className="text-blue-100">Выберите нужный модуль</p>
       </div>

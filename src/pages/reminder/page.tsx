@@ -124,7 +124,7 @@ export function RemindersPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-4 text-white">
+      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] p-4 text-white">
         <div className="flex items-center gap-3 mb-4">
           <Button
             variant="ghost"
