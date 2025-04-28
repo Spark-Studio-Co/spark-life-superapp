@@ -37,7 +37,7 @@ export const ModulesPage = () => {
       description: "AI-консультант здоровья с поддержкой нескольких языков",
       icon: MessageSquare,
       color: "bg-blue-500",
-      to: "/modules/sparkcare",
+      to: "/messanger",
     },
     {
       id: "sparkremind",
@@ -77,7 +77,7 @@ export const ModulesPage = () => {
       description: "Анализ качества воды по фото или через устройство",
       icon: Droplets,
       color: "bg-cyan-500",
-      to: "/modules/sparkwater",
+      to: "/hydration",
     },
     {
       id: "sparkskin",

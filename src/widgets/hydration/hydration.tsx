@@ -1,11 +1,8 @@
-"use client";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Droplet, TrendingUp, TrendingDown } from "lucide-react";
+import { Droplet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { HydrationBottle } from "@/entities/hydration/ui/hydration-bottle";
 
 interface HydrationWidgetProps {

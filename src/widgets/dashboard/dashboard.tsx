@@ -13,19 +13,15 @@ import {
   Moon,
   Pill,
   AlertCircle,
-  ChevronRight,
   BarChart2,
   TrendingUp,
-  Calendar,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { HealthMetric } from "@/entities/health/types/types";
 import { QuickAction } from "@/entities/quick-actions/model/types";
 import { Reminder } from "@/entities/reminder/model/types";
-import { HealthStatusWidget } from "../health/health-status";
 import { AiRecommendationsWidget } from "../ai-recommendations/ai-recommendations";
 import { QuickActionsWidget } from "../quick-actions/quick-actions";
 import { RemindersWidget } from "../reminders/reminders";
@@ -56,24 +52,6 @@ export const DashboardPage = () => {
       bgColor: "bg-green-100",
       progress: 25,
     },
-    {
-      id: "activity",
-      title: "Активность",
-      value: "7,234",
-      icon: Activity,
-      color: "text-blue-500",
-      bgColor: "bg-blue-100",
-      progress: 72,
-    },
-    {
-      id: "medication",
-      title: "Лекарства",
-      value: "2/3",
-      icon: Pill,
-      color: "text-amber-500",
-      bgColor: "bg-amber-100",
-      progress: 66,
-    },
   ];
 
   // Данные для быстрых кнопок
@@ -97,14 +75,14 @@ export const DashboardPage = () => {
       title: "Проверка воды",
       icon: Droplets,
       color: "bg-cyan-500",
-      to: "/modules/sparkwater",
+      to: "/hydration",
     },
     {
       id: "sparkcare",
       title: "AI-консультант",
       icon: MessageSquare,
       color: "bg-blue-500",
-      to: "/modules/sparkcare",
+      to: "/messanger",
     },
     {
       id: "sparkskin",
@@ -186,10 +164,6 @@ export const DashboardPage = () => {
             </motion.div>
           </Link>
         </motion.div>
-      </div>
-
-      <div className="px-6 -mt-12">
-        <HealthStatusWidget status={healthStatus} metrics={healthMetrics} />
       </div>
       <div className="px-6 mt-8 space-y-[48px]">
         <QuickActionsWidget actions={quickActions} />
