@@ -14,7 +14,7 @@ export const HydrationWidget = ({
   goal = 2500,
   initialValue = 500,
 }: HydrationWidgetProps) => {
-  const [hydration, setHydration] = useState(initialValue);
+  const [hydration] = useState(initialValue);
   const [history] = useState([
     { date: "Пн", value: 1800 },
     { date: "Вт", value: 2100 },
@@ -29,21 +29,6 @@ export const HydrationWidget = ({
   const average = Math.round(
     history.reduce((sum, day) => sum + day.value, 0) / history.length
   );
-
-  // Calculate trend (compared to yesterday)
-  const trend =
-    initialValue > history[history.length - 2].value ? "up" : "down";
-  const trendPercent = Math.round(
-    Math.abs(
-      (initialValue - history[history.length - 2].value) /
-        history[history.length - 2].value
-    ) * 100
-  );
-
-  // Update hydration when bottle component changes
-  const handleHydrationChange = (value: number) => {
-    setHydration(value);
-  };
 
   return (
     <motion.div

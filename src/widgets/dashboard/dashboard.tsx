@@ -25,7 +25,6 @@ import { WeeklyProgressWidget } from "../weekly-progress/weekly-progress";
 import { MainLayout } from "@/shared/ui/layout";
 
 export const DashboardPage = () => {
-
   // Данные для быстрых кнопок
   const quickActions: QuickAction[] = [
     {

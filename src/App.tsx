@@ -21,6 +21,7 @@ import { StressTestPage } from "./pages/stress-test/page";
 import { ClinicsPage } from "./pages/clinics-page/clinics-page";
 import SparkFace from "./pages/spark-face/page";
 import ResultsPage from "./pages/spark-face-result/page";
+import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page";
 
 function App() {
   const { token } = useAuthData();
@@ -41,6 +42,7 @@ function App() {
           <Route path="/appointments" element={<AppointmentsPage />} />
           <Route path="/ai-assistent" element={<AiMessengerPage />} />
           <Route path="/clinics" element={<ClinicsPage />} />
+          <Route path="/clinic/:id/doctors" element={<ClinicDoctors />} />
           <Route path="/hydration" element={<HydrationPage />} />
           <Route path="/sleep" element={<SleepPage />} />
           <Route path="/profile" element={<ProfilePage />} />
