@@ -14,7 +14,6 @@ import { DashboardPage } from "./widgets/dashboard/dashboard";
 import { HealthStatsPage } from "./pages/health-stats/page";
 import { HydrationPage } from "./pages/hydration/page";
 import { SleepPage } from "./pages/sleep/page";
-import { AiMessengerPage } from "./pages/ai-messenger/page";
 import { NewReminderPage } from "./pages/new-reminder/page";
 import { RemindersPage } from "./pages/reminder/page";
 import { StressTestPage } from "./pages/stress-test/page";
@@ -22,6 +21,7 @@ import { ClinicsPage } from "./pages/clinics-page/clinics-page";
 import SparkFace from "./pages/spark-face/page";
 import ResultsPage from "./pages/spark-face-result/page";
 import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page";
+import ChatPage from "./pages/ai-messenger/page";
 
 function App() {
   const { token } = useAuthData();
@@ -40,7 +40,7 @@ function App() {
           <Route path="/reminders/new" element={<NewReminderPage />} />
           <Route path="/modules/:moduleId" element={<ModulesPage />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route path="/ai-assistent" element={<AiMessengerPage />} />
+          <Route path="/ai-assistent" element={<ChatPage />} />
           <Route path="/clinics" element={<ClinicsPage />} />
           <Route path="/clinic/:id/doctors" element={<ClinicDoctors />} />
           <Route path="/hydration" element={<HydrationPage />} />

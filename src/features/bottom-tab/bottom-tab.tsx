@@ -1,17 +1,18 @@
-"use client"
+"use client";
 
-import { Home, Grid3X3, Calendar, User } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Link, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
+import { Home, Grid3X3, Calendar, User } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 export function BottomNav() {
-  const location = useLocation()
-  const currentPath = location.pathname
-  const [activeTabIndex, setActiveTabIndex] = useState(0)
-  const [previousTabIndex, setPreviousTabIndex] = useState(0)
-  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  //@ts-ignore
+  const [previousTabIndex, setPreviousTabIndex] = useState(0);
+  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
   const tabs = [
     { id: "home", label: "Главная", icon: Home, path: "/" },
@@ -23,18 +24,20 @@ export function BottomNav() {
       path: "/appointments",
     },
     { id: "profile", label: "Профиль", icon: User, path: "/profile" },
-  ]
+  ];
 
   // Определяем активную вкладку на основе текущего пути
   useEffect(() => {
     const index = tabs.findIndex(
-      (tab) => tab.path === currentPath || (tab.path !== "/" && currentPath.startsWith(tab.path)),
-    )
+      (tab) =>
+        tab.path === currentPath ||
+        (tab.path !== "/" && currentPath.startsWith(tab.path))
+    );
     if (index !== -1 && index !== activeTabIndex) {
-      setPreviousTabIndex(activeTabIndex)
-      setActiveTabIndex(index)
+      setPreviousTabIndex(activeTabIndex);
+      setActiveTabIndex(index);
     }
-  }, [currentPath, activeTabIndex])
+  }, [currentPath, activeTabIndex]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 pb-4 px-4 z-50 pointer-events-none">
@@ -45,8 +48,8 @@ export function BottomNav() {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {tabs.map((tab, index) => {
-          const Icon = tab.icon
-          const isActive = index === activeTabIndex
+          const Icon = tab.icon;
+          const isActive = index === activeTabIndex;
 
           return (
             <Link
@@ -55,12 +58,12 @@ export function BottomNav() {
               to={tab.path}
               className={cn(
                 "flex flex-1 flex-col items-center py-3 px-2 relative",
-                isActive ? "text-primary" : "text-gray-400",
+                isActive ? "text-primary" : "text-gray-400"
               )}
               onClick={() => {
                 if (index !== activeTabIndex) {
-                  setPreviousTabIndex(activeTabIndex)
-                  setActiveTabIndex(index)
+                  setPreviousTabIndex(activeTabIndex);
+                  setActiveTabIndex(index);
                 }
               }}
             >
@@ -102,9 +105,9 @@ export function BottomNav() {
                 />
               )}
             </Link>
-          )
+          );
         })}
       </motion.nav>
     </div>
-  )
+  );
 }
