@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, MoreVertical } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageBubble } from "@/entities/ai-assistant/ui/message-bubble";
 import { QuickPrompt } from "@/entities/ai-assistant/ui/quick-prompt";
 import { useAiAssistant } from "@/entities/ai-assistant/api/use-ai-assistant";
+import ava from "@/assets/avatar.png";
 
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
@@ -61,13 +62,9 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-4 text-white flex items-center gap-3 shadow-md">
+      <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-4 text-white flex items-center gap-3 shadow-md">
         <Avatar className="h-10 w-10 border-2 border-white/30 shadow-inner">
-          <img
-            src="/digital-health-companion.png"
-            alt="AI Assistant"
-            className="object-cover"
-          />
+          <img src={ava} alt="AI Assistant" className="object-cover" />
         </Avatar>
         <div className="flex-1">
           <h1 className="font-semibold">Здоровье AI</h1>
@@ -78,13 +75,6 @@ export default function ChatPage() {
             </span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20"
-        >
-          <MoreVertical className="h-5 w-5" />
-        </Button>
       </div>
 
       {/* Messages area */}
