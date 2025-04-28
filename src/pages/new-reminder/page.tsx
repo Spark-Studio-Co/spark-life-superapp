@@ -130,11 +130,10 @@ export function NewReminderPage() {
                     key={type.id}
                     type="button"
                     variant="outline"
-                    className={`flex flex-col items-center justify-center h-24 border ${
-                      reminderType === type.id
+                    className={`flex flex-col items-center justify-center h-24 border ${reminderType === type.id
                         ? "border-amber-500 bg-amber-50"
                         : "border-gray-200"
-                    }`}
+                      }`}
                     onClick={() => setReminderType(type.id)}
                   >
                     <div
@@ -165,10 +164,10 @@ export function NewReminderPage() {
                     reminderType === "medication"
                       ? "Например: Амлодипин"
                       : reminderType === "appointment"
-                      ? "Например: Визит к кардиологу"
-                      : reminderType === "measurement"
-                      ? "Например: Измерить давление"
-                      : "Введите название напоминания"
+                        ? "Например: Визит к кардиологу"
+                        : reminderType === "measurement"
+                          ? "Например: Измерить давление"
+                          : "Введите название напоминания"
                   }
                   value={reminderTitle}
                   onChange={(e) => setReminderTitle(e.target.value)}
@@ -189,10 +188,10 @@ export function NewReminderPage() {
                     reminderType === "medication"
                       ? "Например: 10мг, 1 таблетка"
                       : reminderType === "appointment"
-                      ? "Например: Клиника на ул. Ленина"
-                      : reminderType === "measurement"
-                      ? "Например: Утренний замер"
-                      : "Введите описание"
+                        ? "Например: Клиника на ул. Ленина"
+                        : reminderType === "measurement"
+                          ? "Например: Утренний замер"
+                          : "Введите описание"
                   }
                   value={reminderDescription}
                   onChange={(e) => setReminderDescription(e.target.value)}
@@ -288,7 +287,6 @@ export function NewReminderPage() {
                       <SelectItem value="weekdays">По будням</SelectItem>
                       <SelectItem value="weekly">Еженедельно</SelectItem>
                       <SelectItem value="monthly">Ежемесячно</SelectItem>
-                      <SelectItem value="custom">Настроить...</SelectItem>
                     </SelectContent>
                   </Select>
                 </motion.div>

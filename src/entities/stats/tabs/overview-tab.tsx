@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 "use client";
 
 import { healthData } from "@/shared/data/health-data";
@@ -12,56 +11,60 @@ import { HealthMetricsCard } from "@/entities/health/ui/health-metrics-card";
 
 export const OverviewTab = () => {
   const {
-    heartRateData,
-    stepsData,
-    sleepData,
-    hydrationData,
-    medicationAdherenceData,
-    healthScoreData,
-  } = healthData;
+    heartRateData = [],
+    stepsData = [],
+    sleepData = [],
+    hydrationData = [],
+    medicationAdherenceData = [],
+    healthScoreData = [],
+  } = healthData || {};
 
   // Расчет средних значений
   const avgHeartRate = Math.round(
-    heartRateData.reduce((sum, item) => sum + item.value, 0) /
-      heartRateData.length
+    (heartRateData?.reduce((sum, item) => sum + item.value, 0) ?? 0) /
+    (heartRateData?.length || 1)
   );
 
   const avgSteps = Math.round(
-    stepsData.reduce((sum, item) => sum + item.value, 0) / stepsData.length
+    (stepsData?.reduce((sum, item) => sum + item.value, 0) ?? 0) /
+    (stepsData?.length || 1)
   );
 
   const avgSleep = (
-    sleepData.reduce(
+    (sleepData?.reduce(
       (sum, item) => sum + item.deep + item.light + item.rem + item.awake,
       0
-    ) / sleepData.length
+    ) ?? 0) / (sleepData?.length || 1)
   ).toFixed(1);
 
   const avgHydration = (
-    hydrationData.reduce((sum, item) => sum + item.value, 0) /
-    hydrationData.length
+    (hydrationData?.reduce((sum, item) => sum + item.value, 0) ?? 0) /
+    (hydrationData?.length || 1)
   ).toFixed(1);
 
   // Расчет трендов
   const heartRateTrend =
-    heartRateData[heartRateData.length - 1].value > heartRateData[0].value
+    (heartRateData?.[heartRateData.length - 1]?.value ?? 0) >
+      (heartRateData?.[0]?.value ?? 0)
       ? "increase"
       : "decrease";
 
   const stepsTrend =
-    stepsData[stepsData.length - 1].value > stepsData[0].value
+    (stepsData?.[stepsData.length - 1]?.value ?? 0) >
+      (stepsData?.[0]?.value ?? 0)
       ? "increase"
       : "decrease";
 
   const sleepTrend =
-    sleepData[sleepData.length - 1].deep +
-      sleepData[sleepData.length - 1].light >
-    sleepData[0].deep + sleepData[0].light
+    ((sleepData?.[sleepData.length - 1]?.deep ?? 0) +
+      (sleepData?.[sleepData.length - 1]?.light ?? 0)) >
+      ((sleepData?.[0]?.deep ?? 0) + (sleepData?.[0]?.light ?? 0))
       ? "increase"
       : "decrease";
 
   const hydrationTrend =
-    hydrationData[hydrationData.length - 1].value > hydrationData[0].value
+    (hydrationData?.[hydrationData.length - 1]?.value ?? 0) >
+      (hydrationData?.[0]?.value ?? 0)
       ? "increase"
       : "decrease";
 
@@ -85,6 +88,7 @@ export const OverviewTab = () => {
           <HealthScoreCard data={healthScoreData} />
         </motion.div>
 
+        {/* Карточки здоровья */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -164,7 +168,7 @@ export const OverviewTab = () => {
         </motion.div>
       </div>
 
-      {/* Инсайты и рекомендации */}
+      {/* Инсайты */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -173,7 +177,7 @@ export const OverviewTab = () => {
         <InsightsCard />
       </motion.div>
 
-      {/* Прием лекарств */}
+      {/* Медикаменты */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

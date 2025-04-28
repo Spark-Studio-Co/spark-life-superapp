@@ -107,7 +107,7 @@ export const DashboardPage = () => {
 
   return (
     <MainLayout>
-      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-6 pt-8 pb-16">
+      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-6 pt-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -122,42 +122,12 @@ export const DashboardPage = () => {
               Забота о здоровье — это инвестиция в ваше будущее
             </p>
           </div>
-          <Link to="/health-stats">
-            <motion.div
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white/25 p-3 rounded-full backdrop-blur-sm"
-            >
-              <BarChart2 className="h-6 w-6 text-white" />
-            </motion.div>
-          </Link>
         </motion.div>
       </div>
-      <div className="px-6 mt-8 space-y-[48px]">
+      <div className="px-6 mt-8 mb-8 space-y-[48px]">
+        <RemindersWidget reminders={reminders} />
         <QuickActionsWidget actions={quickActions} />
         <AiRecommendationsWidget recommendations={aiRecommendations} />
-        <RemindersWidget reminders={reminders} />
-        <WeeklyProgressWidget progress={60} completed={3} total={5} />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-          className="flex justify-center"
-        >
-          <Button
-            asChild
-            variant="outline"
-            className="w-full max-w-xs py-6 rounded-xl transition-all hover:bg-blue-50 hover:border-blue-200"
-          >
-            <Link to="/modules">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              Все модули здоровья
-            </Link>
-          </Button>
-        </motion.div>
       </div>
     </MainLayout>
   );

@@ -66,7 +66,7 @@ export const ModulesPage = () => {
         <p className="text-blue-100">Выберите нужный модуль</p>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="px-4 pt-4 pb-8">
         <div className="bg-white rounded-xl shadow-md p-3 flex items-center mb-6">
           <Search className="h-5 w-5 text-gray-400 mr-2" />
           <Input
