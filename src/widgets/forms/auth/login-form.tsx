@@ -9,14 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion, AnimatePresence } from "framer-motion";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
+    .email("Неверный формат email")
+    .required("Email обязателен"),
   password: Yup.string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters"),
+    .required("Пароль обязателен")
+    .min(8, "Пароль должен содержать минимум 8 символов"),
   rememberMe: Yup.boolean(),
 });
 
@@ -43,12 +44,50 @@ export const LoginForm = () => {
     },
   });
 
+  const formVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+        duration: 0.3,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { x: -20, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+  };
+
+  const errorVariants = {
+    hidden: { height: 0, opacity: 0 },
+    visible: {
+      height: "auto",
+      opacity: 1,
+      transition: { type: "spring", stiffness: 500, damping: 30 },
+    },
+    exit: {
+      height: 0,
+      opacity: 0,
+      transition: { duration: 0.2, ease: "easeInOut" },
+    },
+  };
+
   return (
-    <form
+    <motion.form
       onSubmit={formik.handleSubmit}
-      className="space-y-4 animate-in fade-in duration-500"
+      className="space-y-4"
+      variants={formVariants}
+      initial="hidden"
+      animate="visible"
     >
-      <div className="space-y-2">
+      <motion.div className="space-y-2" variants={itemVariants}>
         <Label htmlFor="email" className="text-sm font-medium">
           Email
         </Label>
@@ -58,30 +97,38 @@ export const LoginForm = () => {
             id="email"
             name="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="вы@пример.com"
             className="pl-10 h-12 bg-card border-input/50 focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary transition-all"
             value={formik.values.email}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
         </div>
-        {formik.touched.email && formik.errors.email && (
-          <p className="text-sm text-destructive animate-in slide-in-from-left-1">
-            {formik.errors.email}
-          </p>
-        )}
-      </div>
+        <AnimatePresence>
+          {formik.touched.email && formik.errors.email && (
+            <motion.p
+              className="text-sm text-destructive"
+              variants={errorVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {formik.errors.email}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-      <div className="space-y-2">
+      <motion.div className="space-y-2" variants={itemVariants}>
         <div className="flex justify-between">
           <Label htmlFor="password" className="text-sm font-medium">
-            Password
+            Пароль
           </Label>
           <Link
-            to="/forgot-password"
+            to="/reset-password"
             className="text-xs text-primary hover:underline transition-colors"
           >
-            Forgot password?
+            Забыли пароль?
           </Link>
         </div>
         <div className="relative group">
@@ -109,18 +156,29 @@ export const LoginForm = () => {
               <Eye className="h-4 w-4" />
             )}
             <span className="sr-only">
-              {showPassword ? "Hide password" : "Show password"}
+              {showPassword ? "Скрыть пароль" : "Показать пароль"}
             </span>
           </Button>
         </div>
-        {formik.touched.password && formik.errors.password && (
-          <p className="text-sm text-destructive animate-in slide-in-from-left-1">
-            {formik.errors.password}
-          </p>
-        )}
-      </div>
+        <AnimatePresence>
+          {formik.touched.password && formik.errors.password && (
+            <motion.p
+              className="text-sm text-destructive"
+              variants={errorVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {formik.errors.password}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-      <div className="flex items-center space-x-2 select-none">
+      <motion.div
+        className="flex items-center space-x-2 select-none"
+        variants={itemVariants}
+      >
         <Checkbox
           id="rememberMe"
           name="rememberMe"
@@ -134,24 +192,34 @@ export const LoginForm = () => {
           htmlFor="rememberMe"
           className="text-sm font-normal cursor-pointer"
         >
-          Remember me for 30 days
+          Запомнить меня на 30 дней
         </Label>
-      </div>
+      </motion.div>
 
-      <Button
-        type="submit"
-        className="w-full h-12 mt-6 font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-            <span>Signing in...</span>
-          </div>
-        ) : (
-          "Sign in"
-        )}
-      </Button>
-    </form>
+      <motion.div variants={itemVariants} whileTap={{ scale: 0.98 }}>
+        <Button
+          type="submit"
+          className="w-full h-12 mt-6 font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <motion.div
+                className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 1,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "linear",
+                }}
+              />
+              <span>Вход...</span>
+            </div>
+          ) : (
+            "Войти"
+          )}
+        </Button>
+      </motion.div>
+    </motion.form>
   );
 };
