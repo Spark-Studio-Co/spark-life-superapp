@@ -145,7 +145,7 @@ export function RemindersPage() {
           <Button
             variant="secondary"
             size="sm"
-            className="bg-white text-amber-600 hover:bg-white/90"
+            className="bg-white text-blue-600 hover:bg-white/90"
             asChild
           >
             <Link to="/reminders/new">
