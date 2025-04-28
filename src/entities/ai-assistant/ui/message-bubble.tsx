@@ -23,6 +23,8 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
     minute: "2-digit",
   });
 
+  // test
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
