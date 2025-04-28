@@ -8,23 +8,29 @@ import {
   Mic,
   Pill,
   AlertCircle,
+  BarChart2,
+  TrendingUp,
   Moon,
   Bell,
+  User,
   RefreshCw,
 } from "lucide-react";
 
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import type { QuickAction } from "@/entities/quick-actions/model/types";
 import type { Reminder } from "@/entities/reminder/model/types";
 import { AiRecommendationsWidget } from "../ai-recommendations/ai-recommendations";
 import { QuickActionsWidget } from "../quick-actions/quick-actions";
-import { RemindersWidget } from "../reminders/reminders";
+import { WeeklyProgressWidget } from "../weekly-progress/weekly-progress";
 import { MainLayout } from "@/shared/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/entities/user/hooks/use-user";
 
 export const DashboardPage = () => {
   // Получаем данные пользователя
-  const { user, isLoading, isError, refetch } = useUser();
+  const { user, isLoading, isError, refetch, getInitials } = useUser();
 
   // Данные для быстрых кнопок
   const quickActions: QuickAction[] = [
@@ -152,6 +158,35 @@ export const DashboardPage = () => {
                 </p>
               </>
             )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link to="/profile">
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isLoading ? (
+                  <Skeleton className="h-12 w-12 rounded-full bg-white/30" />
+                ) : (
+                  <Avatar className="h-12 w-12 border-2 border-white/50">
+                    {user?.profile_image ? (
+                      <img
+                        src={user.profile_image || "/placeholder.svg"}
+                        alt={user.first_name}
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-white/25 text-white">
+                        {getInitials() || <User className="h-6 w-6" />}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                )}
+              </motion.div>
+            </Link>
           </div>
         </motion.div>
       </div>
