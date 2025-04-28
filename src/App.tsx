@@ -14,8 +14,11 @@ import { DashboardPage } from "./widgets/dashboard/dashboard";
 import { HealthStatsPage } from "./pages/health-stats/page";
 import { HydrationPage } from "./pages/hydration/page";
 import { SleepPage } from "./pages/sleep/page";
-import SparkFace from "./pages/spark-face/page";
-import ResultsPage from "./pages/spark-face-result/page";
+import { AiMessengerPage } from "./pages/ai-messenger/page";
+import { NewReminderPage } from "./pages/new-reminder/page";
+import { RemindersPage } from "./pages/reminder/page";
+import { StressTestPage } from "./pages/stress-test/page";
+import { ClinicsPage } from "./pages/clinics-page/clinics-page";
 
 function App() {
   const { token } = useAuthData();
@@ -26,12 +29,16 @@ function App() {
         <>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
           <Route path="/modules" element={<ModulesPage />} />
+          <Route path="/reminder" element={<RemindersPage />} />
+          <Route path="/stress-test" element={<StressTestPage />} />
+          <Route path="/reminders/new" element={<NewReminderPage />} />
           <Route path="/modules/:moduleId" element={<ModulesPage />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
+          <Route path="/messanger" element={<AiMessengerPage />} />
+          <Route path="/clinics" element={<ClinicsPage />} />
           <Route path="/hydration" element={<HydrationPage />} />
           <Route path="/sleep" element={<SleepPage />} />
           <Route path="/profile" element={<ProfilePage />} />

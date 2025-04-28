@@ -9,16 +9,6 @@ export const healthData = {
     { date: "07.05", value: 71, min: 68, max: 75 },
   ],
 
-  stepsData: [
-    { date: "01.05", value: 8432, goal: 10000 },
-    { date: "02.05", value: 7621, goal: 10000 },
-    { date: "03.05", value: 9214, goal: 10000 },
-    { date: "04.05", value: 6532, goal: 10000 },
-    { date: "05.05", value: 8721, goal: 10000 },
-    { date: "06.05", value: 10532, goal: 10000 },
-    { date: "07.05", value: 7234, goal: 10000 },
-  ],
-
   sleepData: [
     { date: "01.05", deep: 2.1, light: 5.2, rem: 1.5, awake: 0.3 },
     { date: "02.05", deep: 1.8, light: 5.5, rem: 1.3, awake: 0.2 },

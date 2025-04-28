@@ -27,13 +27,6 @@ export function SleepCircleIndicator({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-  // Color based on percentage
-  const getColor = () => {
-    if (percentage < 50) return "#3b82f6"; // blue-500
-    if (percentage < 75) return "#8b5cf6"; // violet-500
-    return "#6366f1"; // indigo-500
-  };
-
   // Add sleep hours
   const addSleepHours = (hours: number) => {
     setIsAnimating(true);
@@ -71,14 +64,17 @@ export function SleepCircleIndicator({
 
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-indigo-700 flex items-center gap-2">
-        <Moon className="h-6 w-6" />
-        Сон
+      <h2 className="text-xl font-bold mb-6 text-purple-700 flex items-center gap-2">
+        <Moon className="h-5 w-5" />
+        Трекер сна
       </h2>
 
       <div className="relative w-64 h-64 mb-6">
-        {/* Background circle */}
-        <svg className="w-full h-full" viewBox="0 0 256 256">
+        {/* Background circle with gradient */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-50 to-indigo-50"></div>
+
+        {/* SVG Circle */}
+        <svg className="w-full h-full relative z-10" viewBox="0 0 256 256">
           <circle
             cx="128"
             cy="128"
@@ -88,13 +84,27 @@ export function SleepCircleIndicator({
             strokeWidth="12"
           />
 
-          {/* Progress circle */}
+          {/* Progress circle with gradient */}
+          <defs>
+            <linearGradient
+              id="sleepGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
+              <stop offset="0%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+          </defs>
+
           <motion.circle
             cx="128"
             cy="128"
             r={radius}
             fill="none"
-            stroke={getColor()}
+            stroke="url(#sleepGradient)"
             strokeWidth="12"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -126,7 +136,7 @@ export function SleepCircleIndicator({
                       x={x - 10}
                       y={y - 10}
                       className={`w-5 h-5 ${
-                        isActive ? "text-white" : "text-gray-300"
+                        isActive ? "text-purple-500" : "text-gray-300"
                       }`}
                     />
                   ) : (
@@ -134,7 +144,7 @@ export function SleepCircleIndicator({
                       cx={x}
                       cy={y}
                       r="4"
-                      fill={isActive ? "#fff" : "#cbd5e1"}
+                      fill={isActive ? "#8b5cf6" : "#cbd5e1"}
                     />
                   )}
                 </motion.g>
@@ -177,7 +187,7 @@ export function SleepCircleIndicator({
                 return (
                   <motion.div
                     key={`star-${i}`}
-                    className="absolute"
+                    className="absolute z-20"
                     style={{ left: randomX, top: randomY }}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{
@@ -191,7 +201,7 @@ export function SleepCircleIndicator({
                       times: [0, 0.5, 1],
                     }}
                   >
-                    <Moon className="text-indigo-300 h-3 w-3" />
+                    <Moon className="text-purple-300 h-3 w-3" />
                   </motion.div>
                 );
               })}
@@ -203,7 +213,7 @@ export function SleepCircleIndicator({
       <div className="flex gap-3 mb-4">
         <Button
           onClick={() => addSleepHours(1)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
+          className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
           disabled={sleepHours >= goalHours || isAnimating}
         >
           <Plus className="h-4 w-4" />
@@ -213,22 +223,14 @@ export function SleepCircleIndicator({
         <Button
           onClick={resetSleepHours}
           variant="outline"
-          className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+          className="border-purple-200 text-purple-700 hover:bg-purple-50"
           disabled={sleepHours === 0 || isAnimating}
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="text-sm text-gray-500 text-center">
-        {sleepHours < goalHours / 2 ? (
-          <p>Недостаточно сна. Старайтесь спать больше.</p>
-        ) : sleepHours < goalHours ? (
-          <p>Хороший прогресс! Еще немного до цели.</p>
-        ) : (
-          <p>Отлично! Вы достигли своей цели сна.</p>
-        )}
-      </div>
+      {/* Goal reached celebration */}
       <SleepGoalCelebration
         isOpen={showCelebration}
         onClose={closeCelebration}

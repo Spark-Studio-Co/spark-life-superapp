@@ -87,14 +87,13 @@ export const RemindersWidget = ({ reminders }: RemindersWidgetProps) => {
           className="flex-1 text-sm font-normal text-gray-700 border-gray-200 bg-white hover:bg-gray-50 rounded-lg py-5"
         >
           <Link
-            to="/reminders"
+            to="/reminder"
             className="flex items-center justify-center gap-1"
           >
             Все напоминания
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </Button>
-
         <Button
           variant="default"
           asChild
