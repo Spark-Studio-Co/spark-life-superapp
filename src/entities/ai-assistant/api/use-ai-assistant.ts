@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Message } from "yup";
+import { Message } from "../model/types";
 
 // Простая функция для генерации ID
 const generateId = () =>
