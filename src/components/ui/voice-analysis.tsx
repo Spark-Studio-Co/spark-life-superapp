@@ -28,6 +28,7 @@ export function VoiceAnalysis() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isComplete, setIsComplete] = useState(false)
     const [recordings, setRecordings] = useState<AudioRecording[]>([])
+    //@ts-ignore
     const [audioLevel, setAudioLevel] = useState(0)
 
     // Refs для работы с аудио
@@ -202,7 +203,7 @@ export function VoiceAnalysis() {
     }
 
     return (
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center px-4 pt-10">
             <AnimatePresence mode="wait">
                 {!isComplete ? (
                     <motion.div

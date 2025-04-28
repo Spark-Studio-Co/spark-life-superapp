@@ -39,7 +39,7 @@ function App() {
           <Route path="/reminders/new" element={<NewReminderPage />} />
           <Route path="/modules/:moduleId" element={<ModulesPage />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route path="/messanger" element={<AiMessengerPage />} />
+          <Route path="/ai-assistent" element={<AiMessengerPage />} />
           <Route path="/clinics" element={<ClinicsPage />} />
           <Route path="/hydration" element={<HydrationPage />} />
           <Route path="/sleep" element={<SleepPage />} />

@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Camera, ImageIcon, Sparkles, Shield, Activity } from "lucide-react"
+import { Camera, ImageIcon, Sparkles, Shield, Activity, ArrowLeft } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { MainLayout } from "@/shared/ui/layout"
 
 import { useRef } from "react";
@@ -88,6 +88,30 @@ export default function SparkFace() {
     }
     return (
         <MainLayout>
+            <div className="bg-gradient-to-r from-blue-400 to-cyan-400 px-6 pt-8 pb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex items-center"
+                >
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        className="mr-2 text-white hover:bg-white/20"
+                    >
+                        <Link to="/">
+                            <ArrowLeft className="h-5 w-5" />
+                            <span className="sr-only">Назад</span>
+                        </Link>
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-white">SparkFace</h1>
+                        <p className="text-blue-100">Онлайн диагностика кожи</p>
+                    </div>
+                </motion.div>
+            </div>
             <div className="px-4 py-12">
                 <motion.div
                     className="flex flex-col items-center mb-8"
@@ -95,23 +119,6 @@ export default function SparkFace() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <motion.div
-                        className="flex items-center gap-2 mb-2"
-                        initial={{ scale: 0.9 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.3, type: "spring" }}
-                    >
-                        <Sparkles className="h-7 w-7 text-primary" />
-                        <h1 className="text-4xl font-bold text-primary">Spark Health</h1>
-                    </motion.div>
-
-                    <motion.div
-                        className="w-20 h-1 bg-primary rounded-full mb-8"
-                        initial={{ width: 0 }}
-                        animate={{ width: 80 }}
-                        transition={{ delay: 0.5, duration: 0.5 }}
-                    />
-
                     <motion.h1
                         className="text-3xl font-bold text-center mb-2 text-foreground"
                         initial={{ opacity: 0, y: 20 }}

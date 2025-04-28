@@ -1,24 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Camera,
   MessageSquare,
   Droplets,
-  Smile,
-  Brain,
   Mic,
-  Moon,
   Pill,
   AlertCircle,
   BarChart2,
   TrendingUp,
+  Moon,
+  Bell
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HealthMetric } from "@/entities/health/types/types";
 import { QuickAction } from "@/entities/quick-actions/model/types";
 import { Reminder } from "@/entities/reminder/model/types";
 import { AiRecommendationsWidget } from "../ai-recommendations/ai-recommendations";
@@ -28,50 +25,26 @@ import { WeeklyProgressWidget } from "../weekly-progress/weekly-progress";
 import { MainLayout } from "@/shared/ui/layout";
 
 export const DashboardPage = () => {
-  const [healthStatus] = useState("Норма");
-  const [activeTab, setActiveTab] = useState("home");
-
-  // Данные для мини-графиков
-  const healthMetrics: HealthMetric[] = [
-    {
-      id: "sleep",
-      title: "Сон",
-      value: "7ч 20м",
-      icon: Moon,
-      color: "text-indigo-500",
-      bgColor: "bg-indigo-100",
-      progress: 85,
-    },
-    {
-      id: "stress",
-      title: "Стресс",
-      value: "Низкий",
-      icon: Brain,
-      color: "text-green-500",
-      bgColor: "bg-green-100",
-      progress: 25,
-    },
-  ];
 
   // Данные для быстрых кнопок
   const quickActions: QuickAction[] = [
     {
       id: "sparkface",
-      title: "Сканировать лицо",
+      title: "Анализ лица",
       icon: Camera,
       color: "bg-orange-500",
-      to: "/modules/sparkface",
+      to: "/spark-face",
     },
     {
       id: "sparkvoice",
       title: "Анализ речи",
       icon: Mic,
       color: "bg-rose-500",
-      to: "/modules/sparkvoice",
+      to: "/spark-voice",
     },
     {
       id: "sparkwater",
-      title: "Проверка воды",
+      title: "Гидратация",
       icon: Droplets,
       color: "bg-cyan-500",
       to: "/hydration",
@@ -81,21 +54,21 @@ export const DashboardPage = () => {
       title: "AI-консультант",
       icon: MessageSquare,
       color: "bg-blue-500",
-      to: "/messanger",
+      to: "/ai-assistent",
     },
     {
-      id: "sparkskin",
-      title: "Диагностика кожи",
-      icon: Smile,
-      color: "bg-amber-500",
-      to: "/modules/sparkskin",
+      id: "sparksleep",
+      title: "Трекер сна",
+      icon: Moon,
+      color: "bg-[#38bdf8]",
+      to: "/sleep",
     },
     {
-      id: "sparkmind",
-      title: "Стресс-опрос",
-      icon: Brain,
-      color: "bg-indigo-500",
-      to: "/modules/sparkmind",
+      id: "sparkremind",
+      title: "Напоминания",
+      icon: Bell,
+      color: "bg-purple-500",
+      to: "/reminder",
     },
   ];
 
