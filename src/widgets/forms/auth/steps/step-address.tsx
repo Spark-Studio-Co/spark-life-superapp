@@ -20,21 +20,26 @@ interface StepAddressProps {
 }
 
 const majorCities = [
-  "Москва",
-  "Санкт-Петербург",
-  "Новосибирск",
-  "Екатеринбург",
-  "Казань",
-  "Нижний Новгород",
-  "Челябинск",
-  "Самара",
-  "Омск",
-  "Ростов-на-Дону",
-  "Уфа",
-  "Красноярск",
-  "Воронеж",
-  "Пермь",
-  "Волгоград",
+  "Алматы",
+  "Астана",
+  "Шымкент",
+  "Караганда",
+  "Актобе",
+  "Тараз",
+  "Павлодар",
+  "Усть-Каменогорск",
+  "Семей",
+  "Атырау",
+  "Костанай",
+  "Кызылорда",
+  "Уральск",
+  "Петропавловск",
+  "Актау",
+  "Кокшетау",
+  "Талдыкорган",
+  "Темиртау",
+  "Туркестан",
+  "Экибастуз",
 ];
 
 export const StepAddress = ({ formik }: StepAddressProps) => {
@@ -110,7 +115,7 @@ export const StepAddress = ({ formik }: StepAddressProps) => {
           Адрес <span className="text-destructive">*</span>
         </Label>
         <div className="relative group">
-          <Home className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <Home className="absolute left-3 top-4 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             id="address"
             name="address"
@@ -140,8 +145,8 @@ export const StepAddress = ({ formik }: StepAddressProps) => {
         <Label htmlFor="postalCode" className="text-sm font-medium">
           Почтовый индекс <span className="text-destructive">*</span>
         </Label>
-        <div className="relative group">
-          <MailIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <div className="relative group items-center">
+          <MailIcon className="absolute left-3 top-4 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             id="postalCode"
             name="postalCode"

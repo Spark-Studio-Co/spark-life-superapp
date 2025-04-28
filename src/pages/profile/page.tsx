@@ -6,15 +6,17 @@ import { motion } from "framer-motion"
 import { MainLayout } from "@/shared/ui/layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "react-router-dom"
-import { ChevronRight, FileImage, Activity, RefreshCw, LogOut } from "lucide-react"
+import { ChevronRight, FileImage, Activity, RefreshCw, LogOut, Settings } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useUser } from "@/entities/user/hooks/use-user"
+import { useAuth } from "@/entities/auth/hooks/use-auth"
 import { useState } from "react"
 
 export const ProfilePage = () => {
   const { user, isLoading, isError, refetch } = useUser()
+  const { logout } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const containerVariants = {
@@ -53,12 +55,11 @@ export const ProfilePage = () => {
   // Обработчик выхода из системы
   const handleLogout = () => {
     setIsLoggingOut(true)
-    // Здесь должна быть логика выхода из системы
-    // Например, вызов API для удаления токена, очистка localStorage и т.д.
-    setTimeout(() => {
-      // Перенаправление на страницу входа после выхода
-      window.location.href = "/login"
-    }, 1000)
+    // Вызываем функцию logout из хука useAuth, которая:
+    // 1. Вызывает API для выхода из системы
+    // 2. Удаляет токены из localStorage
+    // 3. Перенаправляет на страницу входа
+    logout()
   }
 
   return (
@@ -155,21 +156,6 @@ export const ProfilePage = () => {
                           <span className="text-gray-500">Заболевания</span>
                           <span className="font-medium">{formatDiseases()}</span>
                         </div>
-                        {user?.med_doc && (
-                          <>
-                            <Separator />
-                            <div className="flex justify-between py-2">
-                              <span className="text-gray-500">Медицинский документ</span>
-                              <Link
-                                to={user.med_doc}
-                                target="_blank"
-                                className="font-medium text-blue-500 hover:underline"
-                              >
-                                Просмотреть
-                              </Link>
-                            </div>
-                          </>
-                        )}
                       </>
                     )}
                   </CardContent>
@@ -206,7 +192,7 @@ export const ProfilePage = () => {
                   </Link>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="group mb-16">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="group">
                   <Link to="/documents" className="block">
                     <Card className="border-none shadow-md overflow-hidden bg-gradient-to-br from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 transition-all duration-300">
                       <CardContent className="p-4 flex items-center justify-between">
@@ -217,6 +203,25 @@ export const ProfilePage = () => {
                           <div>
                             <h3 className="font-medium text-lg">Мои документы</h3>
                             <p className="text-sm text-gray-500">Управление медицинскими файлами</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="group mb-16">
+                  <Link to="/settings" className="block">
+                    <Card className="border-none shadow-md overflow-hidden bg-gradient-to-br from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 transition-all duration-300">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#4facfe] to-[#00f2fe] flex items-center justify-center shadow-md">
+                            <Settings className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-lg">Настройки</h3>
+                            <p className="text-sm text-gray-500">Редактирование медицинской информации</p>
                           </div>
                         </div>
                         <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />

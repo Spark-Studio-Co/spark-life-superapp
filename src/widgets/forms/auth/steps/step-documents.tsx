@@ -27,7 +27,7 @@ export const StepDocuments = ({ formik }: StepDocumentsProps) => {
     setFileError(null);
 
     if (!file) {
-      setFileError("Пожалуйста, выберите файл");
+      // Файл не выбран, но это не ошибка, так как загрузка опциональна
       return;
     }
 
@@ -77,8 +77,11 @@ export const StepDocuments = ({ formik }: StepDocumentsProps) => {
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-2xl font-bold mb-2">Загрузка документов</h2>
-        <p className="text-gray-500 mb-6">
-          Пожалуйста, загрузите медицинскую справку в формате PDF (до 10MB)
+        <p className="text-gray-500 mb-2">
+          Вы можете загрузить медицинскую справку в формате PDF (до 10MB)
+        </p>
+        <p className="text-blue-500 mb-6 font-medium">
+          * Загрузка медицинской справки необязательна. Вы можете пропустить этот шаг и загрузить ее позже в личном кабинете.
         </p>
 
         <div
@@ -165,6 +168,9 @@ export const StepDocuments = ({ formik }: StepDocumentsProps) => {
                   <p className="text-xs text-gray-400 mt-2">
                     Только PDF файлы (до 10MB)
                   </p>
+                  <p className="text-xs text-blue-400 mt-1">
+                    Необязательно - можно пропустить
+                  </p>
                 </div>
               </>
             )}
@@ -182,6 +188,11 @@ export const StepDocuments = ({ formik }: StepDocumentsProps) => {
             <li>Файл должен быть в формате PDF</li>
             <li>Размер файла не должен превышать 10MB</li>
           </ul>
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-blue-700 text-sm">
+              <strong>Примечание:</strong> Если вы не хотите загружать справку сейчас, вы можете просто нажать кнопку "Далее" и загрузить ее позже в личном кабинете.
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>

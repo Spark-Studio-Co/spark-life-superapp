@@ -66,7 +66,7 @@ const Step2Schema = Yup.object().shape({
 });
 
 const Step3Schema = Yup.object().shape({
-  medicalCertificate: Yup.mixed().required("Медицинская справка обязательна"),
+  medicalCertificate: Yup.mixed().nullable(),
 });
 
 const Step4Schema = Yup.object().shape({
@@ -111,20 +111,12 @@ export const MultiStepRegisterForm = () => {
       currentStep === 1
         ? Step1Schema
         : currentStep === 2
-        ? Step2Schema
-        : currentStep === 3
-        ? Step3Schema
-        : Step4Schema,
+          ? Step2Schema
+          : currentStep === 3
+            ? Step3Schema
+            : Step4Schema,
     onSubmit: async (values) => {
-      // Проверяем наличие файла медицинской справки
-      if (!values.medicalCertificate) {
-        toast({
-          title: "Ошибка",
-          description: "Медицинская справка обязательна для регистрации",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Медицинская справка теперь опциональна
 
       // Подготавливаем массив заболеваний
       // Убедимся, что diseases всегда массив строк
@@ -145,42 +137,55 @@ export const MultiStepRegisterForm = () => {
         diseases = [];
       }
 
-      // Формируем данные для регистрации
-      const registerData = {
-        data: {
-          email: values.email,
-          phone: values.phone,
-          first_name: values.firstName,
-          last_name: values.lastName,
-          patronymic: values.middleName,
-          diseases: diseases, // Передаем подготовленный массив
-          password: values.password,
-        },
-        medDocFile: values.medicalCertificate,
+      // Формируем базовые данные для регистрации
+      const baseData = {
+        email: values.email,
+        phone: values.phone,
+        first_name: values.firstName,
+        last_name: values.lastName,
+        patronymic: values.middleName,
+        diseases: diseases, // Передаем подготовленный массив
+        password: values.password,
       };
 
-      // Вызываем мутацию регистрации с данными из формы
-      register(registerData, {
-        onSuccess: () => {
-          setIsRegistrationComplete(true);
-          setCurrentStep(5); // Переход к экрану завершения
-        },
-        onError: (error: any) => {
-          // Выводим детальную информацию об ошибке
-          console.error("Registration error:", error);
+      // Вызываем мутацию регистрации с данными из формы, только если файл был загружен
+      if (values.medicalCertificate) {
+        // Формируем данные для регистрации с файлом
+        const registerData = {
+          data: baseData,
+          medDocFile: values.medicalCertificate,
+        };
+        register(registerData, {
+          onSuccess: () => {
+            setIsRegistrationComplete(true);
+            setCurrentStep(5); // Переход к экрану завершения
+          },
+          onError: (error: any) => {
+            // Выводим детальную информацию об ошибке
+            console.error("Registration error:", error);
 
-          // Показываем уведомление с деталями ошибки
-          toast({
-            title: "Ошибка регистрации",
-            description:
-              error.response?.data?.message ||
-              (Array.isArray(error.response?.data?.message)
-                ? error.response.data.message.join(", ")
-                : "Произошла ошибка при регистрации"),
-            variant: "destructive",
-          });
-        },
-      });
+            // Показываем уведомление с деталями ошибки
+            toast({
+              title: "Ошибка регистрации",
+              description:
+                error.response?.data?.message ||
+                (Array.isArray(error.response?.data?.message)
+                  ? error.response.data.message.join(", ")
+                  : "Произошла ошибка при регистрации"),
+              variant: "destructive",
+            });
+          },
+        });
+      } else {
+        // Если файл не был загружен, показываем предупреждение и переходим к завершению
+        toast({
+          title: "Внимание",
+          description: "Вы не загрузили медицинскую справку. Вы сможете загрузить ее позже в личном кабинете.",
+          variant: "destructive",
+        });
+        setIsRegistrationComplete(true);
+        setCurrentStep(5); // Переход к экрану завершения
+      }
     },
   });
 
@@ -305,16 +310,15 @@ export const MultiStepRegisterForm = () => {
                       index + 1 === currentStep
                         ? 1
                         : index + 1 < currentStep
-                        ? 0.8
-                        : 0.4,
+                          ? 0.8
+                          : 0.4,
                   }}
-                  className={`w-2 h-2 rounded-full ${
-                    index + 1 === currentStep
-                      ? "bg-blue-500"
-                      : index + 1 < currentStep
+                  className={`w-2 h-2 rounded-full ${index + 1 === currentStep
+                    ? "bg-blue-500"
+                    : index + 1 < currentStep
                       ? "bg-blue-400"
                       : "bg-gray-300"
-                  }`}
+                    }`}
                 />
               ))}
             </div>

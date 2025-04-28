@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { RegisterFormData } from "../multistep-form";
 
 interface StepMedicalInfoProps {
@@ -24,54 +25,55 @@ interface StepMedicalInfoProps {
 
 // Список распространенных заболеваний
 const commonDiseases = [
-  { value: "hypertension", label: "Гипертония" },
-  { value: "diabetes", label: "Сахарный диабет" },
-  { value: "asthma", label: "Астма" },
-  { value: "arthritis", label: "Артрит" },
-  { value: "allergy", label: "Аллергия" },
-  { value: "heart_disease", label: "Сердечно-сосудистые заболевания" },
-  { value: "thyroid", label: "Заболевания щитовидной железы" },
-  { value: "migraine", label: "Мигрень" },
-  { value: "depression", label: "Депрессия" },
-  { value: "anxiety", label: "Тревожное расстройство" },
-  { value: "other", label: "Другое" },
+  "Гипертония",
+  "Сахарный диабет",
+  "Астма",
+  "Артрит",
+  "Аллергия",
+  "Сердечно-сосудистые заболевания",
+  "Заболевания щитовидной железы",
+  "Мигрень",
+  "Депрессия",
+  "Тревожное расстройство",
+  "Остеохондроз",
+  "Бронхит",
+  "Гастрит",
+  "Язва желудка",
+  "Хронический фарингит",
+  "Гепатит",
+  "Псориаз",
+  "Экзема",
+  "Глаукома",
+  "Катаракта",
 ];
 
 export const StepMedicalInfo = ({ formik }: StepMedicalInfoProps) => {
-  const [selectedDisease, setSelectedDisease] = useState<string | null>(null);
+  const [newDisease, setNewDisease] = useState("");
 
-  const errorVariants = {
-    hidden: { height: 0, opacity: 0 },
-    visible: {
-      height: "auto",
-      opacity: 1,
-      transition: { type: "spring", stiffness: 500, damping: 30 },
-    },
-    exit: {
-      height: 0,
-      opacity: 0,
-      transition: { duration: 0.2, ease: "easeInOut" },
-    },
-  };
+  // Animation variants for any potential error messages
+  // (Currently not used but kept for future error handling)
 
-  const handleAddDisease = (value: string) => {
+  // Обработчик добавления заболевания из списка
+  const handleAddDiseaseFromSelect = (value: string) => {
     if (value && !formik.values.diseases.includes(value)) {
       formik.setFieldValue("diseases", [...formik.values.diseases, value]);
-      setSelectedDisease(null);
     }
   };
 
+  // Обработчик добавления нового заболевания
+  const handleAddNewDisease = () => {
+    if (newDisease.trim() && !formik.values.diseases.includes(newDisease.trim())) {
+      formik.setFieldValue("diseases", [...formik.values.diseases, newDisease.trim()]);
+      setNewDisease("");
+    }
+  };
+
+  // Обработчик удаления заболевания
   const handleRemoveDisease = (disease: string) => {
     formik.setFieldValue(
       "diseases",
       formik.values.diseases.filter((d) => d !== disease)
     );
-  };
-
-  // Получение названия заболевания по значению
-  const getDiseaseLabel = (value: string) => {
-    const disease = commonDiseases.find((d) => d.value === value);
-    return disease ? disease.label : value;
   };
 
   return (
@@ -88,21 +90,44 @@ export const StepMedicalInfo = ({ formik }: StepMedicalInfoProps) => {
         <Label htmlFor="diseases" className="text-sm font-medium">
           Хронические заболевания
         </Label>
-        <Select value={selectedDisease || ""} onValueChange={handleAddDisease}>
+        <Select onValueChange={handleAddDiseaseFromSelect}>
           <SelectTrigger className="h-12 bg-card border-input/50 focus:ring-primary/20 focus:ring-offset-0 focus:border-primary transition-all">
             <SelectValue placeholder="Выберите заболевание" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Заболевания</SelectLabel>
+              <SelectLabel>Распространенные заболевания</SelectLabel>
               {commonDiseases.map((disease) => (
-                <SelectItem key={disease.value} value={disease.value}>
-                  {disease.label}
+                <SelectItem key={disease} value={disease}>
+                  {disease}
                 </SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>
         </Select>
+
+        <div className="flex gap-2 mt-2">
+          <Input
+            placeholder="Добавить другое заболевание"
+            value={newDisease}
+            onChange={(e) => setNewDisease(e.target.value)}
+            className="h-12 bg-card border-input/50 focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary transition-all"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddNewDisease();
+              }
+            }}
+          />
+          <Button 
+            type="button" 
+            onClick={handleAddNewDisease} 
+            disabled={!newDisease.trim()}
+            className="flex-shrink-0 h-12"
+          >
+            Добавить
+          </Button>
+        </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <AnimatePresence>
@@ -115,7 +140,7 @@ export const StepMedicalInfo = ({ formik }: StepMedicalInfoProps) => {
                 transition={{ duration: 0.2 }}
               >
                 <Badge variant="secondary" className="px-3 py-1.5 text-sm">
-                  {getDiseaseLabel(disease)}
+                  {disease}
                   <button
                     type="button"
                     className="ml-2 text-muted-foreground hover:text-foreground"
@@ -136,36 +161,6 @@ export const StepMedicalInfo = ({ formik }: StepMedicalInfoProps) => {
           )}
         </div>
       </div>
-
-      {formik.values.diseases.includes("other") && (
-        <div className="space-y-2">
-          <Label htmlFor="otherDisease" className="text-sm font-medium">
-            Укажите другое заболевание
-          </Label>
-          <Input
-            id="otherDisease"
-            name="otherDisease"
-            placeholder="Опишите ваше заболевание"
-            className="h-12 bg-card border-input/50 focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary transition-all"
-            value={formik.values.otherDisease}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
-          <AnimatePresence>
-            {formik.touched.otherDisease && formik.errors.otherDisease && (
-              <motion.p
-                className="text-sm text-destructive"
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                {formik.errors.otherDisease}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
 
       <div className="mt-6 p-4 bg-muted/50 rounded-lg">
         <p className="text-sm">

@@ -24,6 +24,7 @@ import ResultsPage from "./pages/spark-face-result/page";
 import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page";
 import ChatPage from "./pages/ai-messenger/page";
 import { DocumentsPage } from "./pages/documents/page";
+import { SettingsPage } from "./pages/settings/page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -220,6 +221,14 @@ function App() {
           }
         />
 
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Redirect for non-existent routes */}
         <Route
           path="*"
