@@ -157,10 +157,10 @@ export function RemindersPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-amber-600" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-blue-600" />
           <Input
             placeholder="Поиск напоминаний..."
-            className="pl-9 bg-white/90 border-0 text-amber-900 placeholder:text-amber-400 rounded-lg"
+            className="pl-9 bg-white/90 border-0 text-blue-600 rounded-lg"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

@@ -55,7 +55,6 @@ export const HydrationPage = () => {
             <Droplet className="h-5 w-5 text-blue-500" />
             Советы по гидратации
           </h2>
-
           <Card className="border-none rounded-2xl shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
             <CardContent className="p-6 space-y-4">
               {hydrationTips.map((tip, index) => (

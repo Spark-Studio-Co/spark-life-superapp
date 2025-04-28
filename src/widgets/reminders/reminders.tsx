@@ -99,7 +99,7 @@ export const RemindersWidget = ({ reminders }: RemindersWidgetProps) => {
         <Button
           variant="default"
           asChild
-          className="flex-1 text-sm font-normal bg-blue-500 hover:bg-blue-600 text-white rounded-lg py-5"
+          className="flex-1 text-sm font-normal bg-blue-500 !text-blue-600 hover:bg-blue-600  rounded-lg py-5"
         >
           <Link
             to="/reminders/new"
