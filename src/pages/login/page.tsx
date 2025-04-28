@@ -3,42 +3,83 @@
 import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Heart, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart } from "lucide-react";
+import { useAuth } from "@/entities/auth/hooks/use-auth";
+
+// Регулярное выражение для проверки телефона в формате E.164
+const phoneRegExp = /^\+[1-9]\d{1,14}$/;
 
 const LoginSchema = Yup.object().shape({
-  emailOrPhone: Yup.string().required("Введите email или телефон"),
+  identifier: Yup.string()
+    .required("Введите email или телефон")
+    .test(
+      "is-email-or-phone",
+      "Введите корректный email или телефон в формате +XXXXXXXXXX",
+      (value) => {
+        if (!value) return false;
+        // Проверяем, является ли значение email или телефоном
+        return (
+          Yup.string().email().isValidSync(value) || // Проверка на email
+          phoneRegExp.test(value) // Проверка на телефон
+        );
+      }
+    ),
   password: Yup.string().required("Пароль обязателен"),
   rememberMe: Yup.boolean(),
 });
 
 export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [identifierType, setIdentifierType] = useState<"email" | "phone">(
+    "email"
+  );
+  const { login, isLoggingIn, loginError } = useAuth();
+
+  // Определяем тип идентификатора (email или телефон)
+  const detectIdentifierType = (value: string) => {
+    if (value.startsWith("+")) {
+      setIdentifierType("phone");
+    } else {
+      setIdentifierType("email");
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
-      emailOrPhone: "",
+      identifier: "",
       password: "",
       rememberMe: false,
     },
     validationSchema: LoginSchema,
     onSubmit: async (values) => {
-      setIsSubmitting(true);
-      console.log("Login form submitted:", values);
+      login({
+        identifier: values.identifier,
+        password: values.password,
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      setIsSubmitting(false);
-      // Here you would typically handle authentication
+      // Если пользователь выбрал "запомнить меня", сохраняем идентификатор в localStorage
+      if (values.rememberMe) {
+        localStorage.setItem("remembered_identifier", values.identifier);
+      } else {
+        localStorage.removeItem("remembered_identifier");
+      }
     },
+  });
+
+  // Загружаем сохраненный идентификатор при монтировании компонента
+  useState(() => {
+    const rememberedIdentifier = localStorage.getItem("remembered_identifier");
+    if (rememberedIdentifier) {
+      formik.setFieldValue("identifier", rememberedIdentifier);
+      formik.setFieldValue("rememberMe", true);
+      detectIdentifierType(rememberedIdentifier);
+    }
   });
 
   const errorVariants = {
@@ -178,63 +219,67 @@ export const LoginPage = () => {
 
             <form onSubmit={formik.handleSubmit} className="space-y-4">
               <div className="space-y-1">
-                <Label
-                  htmlFor="emailOrPhone"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Email или телефон <span className="text-red-500">*</span>
+                <Label htmlFor="identifier" className="text-sm font-medium">
+                  Email или телефон <span className="text-destructive">*</span>
                 </Label>
                 <div className="relative group">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  {identifierType === "email" ? (
+                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  ) : (
+                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  )}
                   <Input
-                    id="emailOrPhone"
-                    name="emailOrPhone"
-                    placeholder="вы@пример.com или +7 (999) 123-45-67"
-                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus-visible:ring-blue-500/20 focus-visible:ring-offset-0 focus-visible:border-blue-500 transition-all rounded-lg"
-                    value={formik.values.emailOrPhone}
-                    onChange={formik.handleChange}
+                    id="identifier"
+                    name="identifier"
+                    placeholder={
+                      identifierType === "email"
+                        ? "вы@пример.com"
+                        : "+7XXXXXXXXXX"
+                    }
+                    className="pl-10 h-10 bg-background/50 focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary transition-all rounded-lg"
+                    value={formik.values.identifier}
+                    onChange={(e) => {
+                      formik.handleChange(e);
+                      detectIdentifierType(e.target.value);
+                    }}
                     onBlur={formik.handleBlur}
                   />
                 </div>
                 <AnimatePresence>
-                  {formik.touched.emailOrPhone &&
-                    formik.errors.emailOrPhone && (
-                      <motion.p
-                        className="text-xs text-red-500"
-                        variants={errorVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        {formik.errors.emailOrPhone}
-                      </motion.p>
-                    )}
+                  {formik.touched.identifier && formik.errors.identifier && (
+                    <motion.p
+                      className="text-xs text-destructive"
+                      variants={errorVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                    >
+                      {formik.errors.identifier}
+                    </motion.p>
+                  )}
                 </AnimatePresence>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <Label
-                    htmlFor="password"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Пароль <span className="text-red-500">*</span>
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Пароль <span className="text-destructive">*</span>
                   </Label>
                   <Link
                     to="/reset-password"
-                    className="text-xs text-blue-500 hover:underline"
+                    className="text-xs text-primary hover:underline"
                   >
                     Забыли пароль?
                   </Link>
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus-visible:ring-blue-500/20 focus-visible:ring-offset-0 focus-visible:border-blue-500 transition-all rounded-lg"
+                    className="pl-10 h-10 bg-background/50 focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary transition-all rounded-lg"
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -243,7 +288,7 @@ export const LoginPage = () => {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1 h-8 w-8 text-gray-400 hover:text-gray-700"
+                    className="absolute right-1 top-1 h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -259,7 +304,7 @@ export const LoginPage = () => {
                 <AnimatePresence>
                   {formik.touched.password && formik.errors.password && (
                     <motion.p
-                      className="text-xs text-red-500"
+                      className="text-xs text-destructive"
                       variants={errorVariants}
                       initial="hidden"
                       animate="visible"
@@ -279,7 +324,7 @@ export const LoginPage = () => {
                   onCheckedChange={(checked) => {
                     formik.setFieldValue("rememberMe", checked);
                   }}
-                  className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label
                   htmlFor="rememberMe"
@@ -289,15 +334,32 @@ export const LoginPage = () => {
                 </Label>
               </div>
 
+              {/* Отображение ошибки от API */}
+              <AnimatePresence>
+                {loginError && (
+                  <motion.div
+                    className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive"
+                    variants={errorVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    {loginError instanceof Error
+                      ? loginError.message
+                      : "Произошла ошибка при входе. Пожалуйста, проверьте введенные данные."}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <Button
                 type="submit"
-                className="w-full h-10 mt-2 font-medium bg-blue-500 hover:bg-blue-600 text-white transition-all"
-                disabled={isSubmitting}
+                className="w-full h-10 mt-2 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
+                disabled={isLoggingIn}
               >
-                {isSubmitting ? (
+                {isLoggingIn ? (
                   <div className="flex items-center gap-2">
                     <motion.div
-                      className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
+                      className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
                       animate={{ rotate: 360 }}
                       transition={{
                         duration: 1,
@@ -318,7 +380,7 @@ export const LoginPage = () => {
                 Нет аккаунта?{" "}
                 <Link
                   to="/register"
-                  className="text-blue-500 font-medium hover:underline"
+                  className="text-primary font-medium hover:underline"
                 >
                   Зарегистрироваться
                 </Link>
