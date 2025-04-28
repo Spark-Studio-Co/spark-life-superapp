@@ -59,7 +59,7 @@ export const SettingsPage = () => {
     // Обработчик изменения полей формы
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        
+
         // Проверка для числовых полей
         if (name === 'age' || name === 'height' || name === 'weight') {
             // Если значение пустое, разрешаем его
@@ -70,10 +70,10 @@ export const SettingsPage = () => {
                 }))
                 return
             }
-            
+
             // Преобразуем в число
             const numValue = parseFloat(value)
-            
+
             // Проверяем, что это действительно число и оно не отрицательное
             if (!isNaN(numValue) && numValue >= 0) {
                 setFormData((prev) => ({
@@ -163,11 +163,6 @@ export const SettingsPage = () => {
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-lg flex items-center justify-between">
                                             <span>Медицинская информация</span>
-                                            {user?.role && (
-                                                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                                                    {user.role}
-                                                </Badge>
-                                            )}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">

@@ -114,11 +114,6 @@ export const ProfilePage = () => {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center justify-between">
                       <span>Медицинская информация</span>
-                      {user?.role && (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                          {user.role}
-                        </Badge>
-                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
