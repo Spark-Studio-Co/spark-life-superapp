@@ -12,7 +12,6 @@ import { StepAddress } from "./steps/step-address";
 import { StepProgress } from "./steps/step-progress";
 import { StepComplete } from "./steps/step-complete";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuthData } from "@/entities/auth/model/use-auth-store";
 import { useAuth } from "@/entities/auth/hooks/use-auth";
 
 // Определение типа для данных формы
