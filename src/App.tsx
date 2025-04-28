@@ -23,6 +23,7 @@ import SparkFace from "./pages/spark-face/page";
 import ResultsPage from "./pages/spark-face-result/page";
 import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page";
 import ChatPage from "./pages/ai-messenger/page";
+import { DocumentsPage } from "./pages/documents/page";
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
