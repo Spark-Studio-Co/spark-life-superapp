@@ -27,6 +27,7 @@ import { MainLayout } from "@/shared/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/entities/user/hooks/use-user";
+import { RemindersWidget } from "../reminders/reminders";
 
 export const DashboardPage = () => {
   // Получаем данные пользователя
