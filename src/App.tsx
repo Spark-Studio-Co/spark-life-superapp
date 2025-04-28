@@ -19,6 +19,8 @@ import { NewReminderPage } from "./pages/new-reminder/page";
 import { RemindersPage } from "./pages/reminder/page";
 import { StressTestPage } from "./pages/stress-test/page";
 import { ClinicsPage } from "./pages/clinics-page/clinics-page";
+import SparkFace from "./pages/spark-face/page";
+import ResultsPage from "./pages/spark-face-result/page";
 
 function App() {
   const { token } = useAuthData();
