@@ -7,6 +7,13 @@ import { LoginPage } from "./pages/login/page";
 import { RegisterPage } from "./pages/register/page";
 import { ResetPasswordPage } from "./pages/reset-password/page";
 import VoiceAnalysisPage from "./pages/voice-analysis/page";
+import { ModulesPage } from "./pages/modules/page";
+import { AppointmentsPage } from "./pages/appointments/appointments-page";
+import { ProfilePage } from "./pages/profile/page";
+import { DashboardPage } from "./widgets/dashboard/dashboard";
+import { HealthStatsPage } from "./pages/health-stats/page";
+import { HydrationPage } from "./pages/hydration/page";
+import { SleepPage } from "./pages/sleep/page";
 
 function App() {
   const { token } = useAuthData();
@@ -17,8 +24,17 @@ function App() {
         <>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/voice-analysis" element={<VoiceAnalysisPage />} />
+          <Route path="/modules" element={<ModulesPage />} />
+          <Route path="/modules/:moduleId" element={<ModulesPage />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
+          <Route path="/hydration" element={<HydrationPage />} />
+          <Route path="/sleep" element={<SleepPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/health-stats" element={<HealthStatsPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </>
       );
