@@ -16,6 +16,7 @@ export interface LoginData {
 }
 
 export interface AuthResponse {
+  userId: any;
   access_token: string;
   refresh_token: string;
 }
@@ -55,7 +56,6 @@ export const authService = {
   // Вход пользователя
   login: async (data: LoginData): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>("/auth/login", data);
-    console.log(response);
     return response.data;
   },
 

@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -15,6 +15,7 @@ import {
   Stethoscope,
   Activity,
   Droplet,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,10 +30,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+// Обновляем импорт хука useNotifications
+import { useAuthData } from "@/entities/auth/model/use-auth-store";
+import { useNotifications } from "@/entities/notification/hooks/use-notification";
 
 export function NewReminderPage() {
   const navigate = useNavigate();
+  const { userId } = useAuthData();
+  const { createNotification, isCreating, mapReminderTypeToNotificationType } =
+    useNotifications();
+
   const [reminderType, setReminderType] = useState("medication");
   const [reminderTime, setReminderTime] = useState("08:00");
   const [reminderDate, setReminderDate] = useState(
@@ -42,24 +49,66 @@ export function NewReminderPage() {
   const [reminderDescription, setReminderDescription] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrencePattern, setRecurrencePattern] = useState("daily");
+  const [titleError, setTitleError] = useState("");
+  const [userError, setUserError] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted");
+
+    // Reset previous errors
+    setTitleError("");
+    setUserError("");
 
     // Validation
+    let isValid = true;
+
     if (!reminderTitle.trim()) {
-      toast.error("Пожалуйста, введите название напоминания");
+      setTitleError("Пожалуйста, введите название напоминания");
+      isValid = false;
+    }
+
+    if (!userId) {
+      setUserError("Необходимо войти в систему");
+      isValid = false;
+    }
+
+    if (!isValid) {
       return;
     }
 
-    // Here you would typically save the reminder to your state/database
-    toast.success("Напоминание успешно создано!");
+    // Создаем объект для отправки на сервер
+    const notificationData = {
+      user_id: Number(userId),
+      end_date: reminderDate,
+      time: reminderTime,
+      type: reminderType, // Используем исходное значение типа
+      title: reminderTitle,
+      description: reminderDescription || undefined,
+      is_recurring: isRecurring,
+      recurrence_pattern: isRecurring ? recurrencePattern : undefined,
+    };
 
-    // Navigate back to reminders page
-    setTimeout(() => {
-      navigate("/reminders");
-    }, 1000);
+    console.log("Reminder type being sent:", reminderType);
+    console.log("Sending notification data:", notificationData);
+
+    // Отмечаем, что форма была отправлена
+    setIsSubmitted(true);
+
+    // Отправляем данные на сервер
+    createNotification(notificationData);
   };
+
+  useEffect(() => {
+    if (isSubmitted && !isCreating) {
+      // Если форма была отправлена и процесс создания завершен
+      console.log("Notification created successfully");
+      setTimeout(() => {
+        navigate("/reminder");
+      }, 1000);
+    }
+  }, [isSubmitted, isCreating, navigate]);
 
   const reminderTypeOptions = [
     {
@@ -118,6 +167,11 @@ export function NewReminderPage() {
       {/* Form */}
       <div className="flex-1 p-4">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {userError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              {userError}
+            </div>
+          )}
           {/* Reminder Type */}
           <Card className="border-none rounded-xl shadow-md overflow-hidden">
             <CardContent className="p-4">
@@ -130,10 +184,11 @@ export function NewReminderPage() {
                     key={type.id}
                     type="button"
                     variant="outline"
-                    className={`flex flex-col items-center justify-center h-24 border ${reminderType === type.id
+                    className={`flex flex-col items-center justify-center h-24 border ${
+                      reminderType === type.id
                         ? "border-amber-500 bg-amber-50"
                         : "border-gray-200"
-                      }`}
+                    }`}
                     onClick={() => setReminderType(type.id)}
                   >
                     <div
@@ -164,15 +219,23 @@ export function NewReminderPage() {
                     reminderType === "medication"
                       ? "Например: Амлодипин"
                       : reminderType === "appointment"
-                        ? "Например: Визит к кардиологу"
-                        : reminderType === "measurement"
-                          ? "Например: Измерить давление"
-                          : "Введите название напоминания"
+                      ? "Например: Визит к кардиологу"
+                      : reminderType === "measurement"
+                      ? "Например: Измерить давление"
+                      : "Введите название напоминания"
                   }
                   value={reminderTitle}
-                  onChange={(e) => setReminderTitle(e.target.value)}
-                  className="border-gray-200"
+                  onChange={(e) => {
+                    setReminderTitle(e.target.value);
+                    if (e.target.value.trim()) setTitleError("");
+                  }}
+                  className={`border-gray-200 ${
+                    titleError ? "border-red-500" : ""
+                  }`}
                 />
+                {titleError && (
+                  <p className="text-red-500 text-sm mt-1">{titleError}</p>
+                )}
               </div>
 
               <div>
@@ -188,10 +251,10 @@ export function NewReminderPage() {
                     reminderType === "medication"
                       ? "Например: 10мг, 1 таблетка"
                       : reminderType === "appointment"
-                        ? "Например: Клиника на ул. Ленина"
-                        : reminderType === "measurement"
-                          ? "Например: Утренний замер"
-                          : "Введите описание"
+                      ? "Например: Клиника на ул. Ленина"
+                      : reminderType === "measurement"
+                      ? "Например: Утренний замер"
+                      : "Введите описание"
                   }
                   value={reminderDescription}
                   onChange={(e) => setReminderDescription(e.target.value)}
@@ -299,8 +362,16 @@ export function NewReminderPage() {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-6 rounded-xl shadow-lg"
+              disabled={isCreating}
             >
-              Создать напоминание
+              {isCreating ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Создание...</span>
+                </div>
+              ) : (
+                "Создать напоминание"
+              )}
             </Button>
           </div>
         </form>
