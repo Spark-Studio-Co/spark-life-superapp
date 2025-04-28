@@ -1,14 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Camera,
-  MessageSquare,
-  Bell,
-  Droplets,
-  Mic,
-  Search,
-} from "lucide-react";
+import { Camera, Bell, Droplets, Mic, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { MainLayout } from "@/shared/ui/layout";
