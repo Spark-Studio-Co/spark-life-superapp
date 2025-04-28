@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/entities/auth/hooks/use-auth";
 
-// Регулярное выражение для проверки телефона в формате E.164
 const phoneRegExp = /^\+[1-9]\d{1,14}$/;
 
 const LoginSchema = Yup.object().shape({
@@ -22,7 +21,6 @@ const LoginSchema = Yup.object().shape({
       "is-email-or-phone",
       "Введите корректный email или телефон в формате +XXXXXXXXXX",
       (value) => {
-        // Проверяем, является ли значение email или телефоном
         return (
           Yup.string().email().isValidSync(value) || // Проверка на email
           phoneRegExp.test(value) // Проверка на телефон

@@ -25,7 +25,7 @@ import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page
 import ChatPage from "./pages/ai-messenger/page";
 import { DocumentsPage } from "./pages/documents/page";
 
-// Компонент для защищенных маршрутов
+// Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { token } = useAuthData();
 
@@ -36,7 +36,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Компонент для маршрутов аутентификации
+// Component for authentication routes
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { token } = useAuthData();
 
@@ -50,43 +50,10 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   const { token } = useAuthData();
 
-  const renderRoutes = () => {
-    if (!token) {
-      return (
-        <>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
-          <Route path="/modules" element={<ModulesPage />} />
-          <Route path="/reminder" element={<RemindersPage />} />
-          <Route path="/stress-test" element={<StressTestPage />} />
-          <Route path="/reminders/new" element={<NewReminderPage />} />
-          <Route path="/modules/:moduleId" element={<ModulesPage />} />
-          <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route path="/ai-assistent" element={<ChatPage />} />
-          <Route path="/clinics" element={<ClinicsPage />} />
-          <Route path="/clinic/:id/doctors" element={<ClinicDoctors />} />
-          <Route path="/hydration" element={<HydrationPage />} />
-          <Route path="/sleep" element={<SleepPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/health-stats" element={<HealthStatsPage />} />
-          <Route path="/spark-face" element={<SparkFace />} />
-          <Route path="/spark-face-result" element={<ResultsPage />} />
-          <Route path="/documents" element={<DocumentsPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </>
-      );
-    }
-
-    return <></>;
-  };
-
   return (
     <QueryClientProvider client={reactQueryClient}>
       <Routes>
-        {/* Маршруты аутентификации (доступны только неаутентифицированным пользователям) */}
+        {/* Auth routes - only accessible when not logged in */}
         <Route
           path="/login"
           element={
@@ -112,30 +79,148 @@ function App() {
           }
         />
 
-        {/* Публичные маршруты (доступны всем) */}
+        {/* Public routes - accessible to everyone */}
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
 
-        {/* Защищенные маршруты (требуют аутентификации) */}
-        <Route path="/">
-          <Route index element={<DashboardPage />} />
-          <Route path="modules" element={<ModulesPage />} />
-          <Route path="modules/:moduleId" element={<ModulesPage />} />
-          <Route path="reminder" element={<RemindersPage />} />
-          <Route path="reminders/new" element={<NewReminderPage />} />
-          <Route path="stress-test" element={<StressTestPage />} />
-          <Route path="appointments" element={<AppointmentsPage />} />
-          <Route path="ai-assistent" element={<ChatPage />} />
-          <Route path="clinics" element={<ClinicsPage />} />
-          <Route path="clinic/:id/doctors" element={<ClinicDoctors />} />
-          <Route path="hydration" element={<HydrationPage />} />
-          <Route path="sleep" element={<SleepPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="health-stats" element={<HealthStatsPage />} />
-          <Route path="spark-face" element={<SparkFace />} />
-          <Route path="spark-face-result" element={<ResultsPage />} />
-        </Route>
+        {/* Protected routes - require authentication */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/modules"
+          element={
+            <ProtectedRoute>
+              <ModulesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/modules/:moduleId"
+          element={
+            <ProtectedRoute>
+              <ModulesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reminder"
+          element={
+            <ProtectedRoute>
+              <RemindersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reminders/new"
+          element={
+            <ProtectedRoute>
+              <NewReminderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/stress-test"
+          element={
+            <ProtectedRoute>
+              <StressTestPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments"
+          element={
+            <ProtectedRoute>
+              <AppointmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-assistent"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clinics"
+          element={
+            <ProtectedRoute>
+              <ClinicsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clinic/:id/doctors"
+          element={
+            <ProtectedRoute>
+              <ClinicDoctors />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hydration"
+          element={
+            <ProtectedRoute>
+              <HydrationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sleep"
+          element={
+            <ProtectedRoute>
+              <SleepPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/health-stats"
+          element={
+            <ProtectedRoute>
+              <HealthStatsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spark-face"
+          element={
+            <ProtectedRoute>
+              <SparkFace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spark-face-result"
+          element={
+            <ProtectedRoute>
+              <ResultsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/documents"
+          element={
+            <ProtectedRoute>
+              <DocumentsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Перенаправление для несуществующих маршрутов */}
+        {/* Redirect for non-existent routes */}
         <Route
           path="*"
           element={<Navigate to={token ? "/" : "/login"} replace />}

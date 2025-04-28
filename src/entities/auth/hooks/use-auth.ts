@@ -15,7 +15,8 @@ export function useAuth() {
   const navigate = useNavigate();
 
   // Получаем методы из Zustand store
-  const { saveToken, saveRefreshToken, removeToken } = useAuthData();
+  const { saveToken, saveRefreshToken, removeToken, saveUserId } =
+    useAuthData();
 
   // Мутация для регистрации
   const {
@@ -30,11 +31,16 @@ export function useAuth() {
       data: RegisterData;
       medDocFile: File;
     }) => authService.register(data, medDocFile),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       // Сохраняем токены в Zustand store
       saveToken(data.access_token);
       if (data.refresh_token) {
         saveRefreshToken(data.refresh_token);
+      }
+
+      saveUserId(data.userId);
+      if (data.userId) {
+        saveRefreshToken(data.userId);
       }
 
       toast({
@@ -67,6 +73,11 @@ export function useAuth() {
       saveToken(data.access_token);
       if (data.refresh_token) {
         saveRefreshToken(data.refresh_token);
+      }
+
+      saveUserId(data.userId);
+      if (data.userId) {
+        saveRefreshToken(data.userId);
       }
 
       toast({
