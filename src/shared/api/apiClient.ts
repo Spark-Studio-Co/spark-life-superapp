@@ -3,7 +3,7 @@ import { useAuthData } from "../../entities/auth/model/use-auth-store";
 
 export const apiClient = axios.create({
   // baseURL: "https://agro-pv-backend-production.up.railway.app/api",
-  baseURL: "http://localhost:6001/api",
+  baseURL: "https://spark-life-backend-production.up.railway.app/api",
   withCredentials: true,
 });
 
