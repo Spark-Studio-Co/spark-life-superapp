@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Calendar, Download, ChevronLeft, Moon, Droplet, Activity, Brain, ArrowDown, Info } from "lucide-react"
+import { Calendar, Download, Moon, Droplet, Activity, Brain, ArrowDown, Info, ArrowLeft } from "lucide-react"
 import { Link } from "react-router-dom"
 import { MainLayout } from "@/shared/ui/layout"
 import { Button } from "@/components/ui/button"
@@ -64,15 +64,16 @@ export const HealthStatsPage = ({ className }: HealthStatsPageProps = {}) => {
 
   return (
     <MainLayout>
-      {/* Header */}
-      <div className="bg-[#4169E1] text-white px-4 pt-6 pb-6">
-        <div className="flex items-center mb-2">
-          <Link to="/" className="mr-3">
-            <ChevronLeft className="h-6 w-6" />
+      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-4 pt-6 pb-6">
+        <div className="flex flex-row items-center">
+          <Link to="/profile">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ArrowLeft className="h-8 w-8 text-white" />
+            </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Статистика здоровья</h1>
+          <h1 className="text-2xl font-bold text-white">Статистика здоровья</h1>
         </div>
-        <p className="text-blue-100">Подробный анализ ваших показателей</p>
+        <p className="text-blue-100">Подробный анализ вашего здоровья</p>
       </div>
 
       <motion.div
