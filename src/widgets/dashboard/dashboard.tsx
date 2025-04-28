@@ -9,7 +9,6 @@ import {
   Smile,
   Brain,
   Mic,
-  Activity,
   Moon,
   Pill,
   AlertCircle,
