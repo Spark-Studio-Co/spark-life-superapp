@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -232,7 +230,7 @@ export const VitalsTab = () => {
                       `${name}: ${(percent * 100).toFixed(0)}%`
                     }
                   >
-                    {stressData.map((entry, index) => (
+                    {stressData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}

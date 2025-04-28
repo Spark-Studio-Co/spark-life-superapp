@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Camera,
@@ -9,7 +8,6 @@ import {
   Smile,
   Brain,
   Mic,
-  Moon,
   Pill,
   AlertCircle,
   BarChart2,
@@ -18,7 +16,6 @@ import {
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HealthMetric } from "@/entities/health/types/types";
 import { QuickAction } from "@/entities/quick-actions/model/types";
 import { Reminder } from "@/entities/reminder/model/types";
 import { AiRecommendationsWidget } from "../ai-recommendations/ai-recommendations";
@@ -28,31 +25,6 @@ import { WeeklyProgressWidget } from "../weekly-progress/weekly-progress";
 import { MainLayout } from "@/shared/ui/layout";
 
 export const DashboardPage = () => {
-  const [healthStatus] = useState("Норма");
-  const [activeTab, setActiveTab] = useState("home");
-
-  // Данные для мини-графиков
-  const healthMetrics: HealthMetric[] = [
-    {
-      id: "sleep",
-      title: "Сон",
-      value: "7ч 20м",
-      icon: Moon,
-      color: "text-indigo-500",
-      bgColor: "bg-indigo-100",
-      progress: 85,
-    },
-    {
-      id: "stress",
-      title: "Стресс",
-      value: "Низкий",
-      icon: Brain,
-      color: "text-green-500",
-      bgColor: "bg-green-100",
-      progress: 25,
-    },
-  ];
-
   // Данные для быстрых кнопок
   const quickActions: QuickAction[] = [
     {

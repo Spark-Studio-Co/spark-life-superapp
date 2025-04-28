@@ -17,20 +17,6 @@ interface StepDocumentsProps {
 export const StepDocuments = ({ formik }: StepDocumentsProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
-  const errorVariants = {
-    hidden: { height: 0, opacity: 0 },
-    visible: {
-      height: "auto",
-      opacity: 1,
-      transition: { type: "spring", stiffness: 500, damping: 30 },
-    },
-    exit: {
-      height: 0,
-      opacity: 0,
-      transition: { duration: 0.2, ease: "easeInOut" },
-    },
-  };
-
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);

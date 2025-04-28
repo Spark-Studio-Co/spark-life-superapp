@@ -94,10 +94,6 @@ export function NewReminderPage() {
     },
   ];
 
-  const selectedType = reminderTypeOptions.find(
-    (type) => type.id === reminderType
-  );
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}

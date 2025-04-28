@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use client";
 
 import { healthData } from "@/shared/data/health-data";

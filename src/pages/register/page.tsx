@@ -1,5 +1,4 @@
 "use client";
-import { Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { MultiStepRegisterForm } from "@/widgets/forms/auth/multistep-form";
 
@@ -22,18 +21,6 @@ export const RegisterPage = () => {
       y: 0,
       opacity: 1,
       transition: { type: "spring", stiffness: 300, damping: 24 },
-    },
-  };
-
-  const pulseVariants = {
-    pulse: {
-      scale: [1, 1.05, 1],
-      opacity: [0.7, 1, 0.7],
-      transition: {
-        duration: 2,
-        repeat: Number.POSITIVE_INFINITY,
-        ease: "easeInOut",
-      },
     },
   };
 
