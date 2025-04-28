@@ -29,7 +29,7 @@ export const ModulesPage = () => {
       description: "Раннее выявление диабета по селфи",
       icon: Camera,
       color: "bg-orange-500",
-      to: "/modules/sparkface",
+      to: "/spark-face",
     },
     {
       id: "sparkcare",
@@ -101,7 +101,7 @@ export const ModulesPage = () => {
       description: "Анализ речи на признаки депрессии",
       icon: Mic,
       color: "bg-rose-500",
-      to: "/modules/sparkvoice",
+      to: "/spark-voice",
     },
   ];
 

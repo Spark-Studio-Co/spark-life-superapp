@@ -63,6 +63,7 @@ export const ModulePage = () => {
       title: "SparkVoice",
       description: "Анализ речи на признаки депрессии",
       color: "bg-rose-500",
+
     },
   };
 

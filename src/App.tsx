@@ -6,7 +6,7 @@ import { useAuthData } from "./entities/auth/model/use-auth-store";
 import { LoginPage } from "./pages/login/page";
 import { RegisterPage } from "./pages/register/page";
 import { ResetPasswordPage } from "./pages/reset-password/page";
-import VoiceAnalysisPage from "./pages/voice-analysis/page";
+import VoiceAnalysisPage from "./pages/spark-voice/page";
 import { ModulesPage } from "./pages/modules/page";
 import { AppointmentsPage } from "./pages/appointments/appointments-page";
 import { ProfilePage } from "./pages/profile/page";
@@ -14,6 +14,8 @@ import { DashboardPage } from "./widgets/dashboard/dashboard";
 import { HealthStatsPage } from "./pages/health-stats/page";
 import { HydrationPage } from "./pages/hydration/page";
 import { SleepPage } from "./pages/sleep/page";
+import SparkFace from "./pages/spark-face/page";
+import ResultsPage from "./pages/spark-face-result/page";
 
 function App() {
   const { token } = useAuthData();
@@ -26,7 +28,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/voice-analysis" element={<VoiceAnalysisPage />} />
+          <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
           <Route path="/modules" element={<ModulesPage />} />
           <Route path="/modules/:moduleId" element={<ModulesPage />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
@@ -35,6 +37,8 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/" element={<DashboardPage />} />
           <Route path="/health-stats" element={<HealthStatsPage />} />
+          <Route path="/spark-face" element={<SparkFace />} />
+          <Route path="/spark-face-result" element={<ResultsPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </>
       );
