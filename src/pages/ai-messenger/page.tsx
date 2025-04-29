@@ -89,7 +89,7 @@ export default function ChatPage() {
             >
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mb-4 mx-auto shadow-lg">
                 <img
-                  src="/digital-health-companion.png"
+                  src={ava}
                   alt="AI Health Assistant"
                   className="w-full rounded-full h-full object-cover"
                 />
