@@ -29,7 +29,16 @@ export default function SparkFace() {
       setCameraActive(true);
       setCameraError(false);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Use constraints that work better on mobile
+      const constraints = {
+        video: {
+          facingMode: "user", // Use front camera
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
@@ -113,14 +122,29 @@ export default function SparkFace() {
     if (videoRef.current) {
       const video = videoRef.current;
       const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      
+      // Ensure we get proper dimensions
+      const width = video.videoWidth || 640;
+      const height = video.videoHeight || 480;
+      
+      canvas.width = width;
+      canvas.height = height;
 
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Draw the video frame to the canvas
+        ctx.drawImage(video, 0, 0, width, height);
+        
+        // Convert to image URL
         const imageUrl = canvas.toDataURL("image/png");
         setSelectedImage(imageUrl);
+        
+        // Stop the camera stream
+        const stream = video.srcObject as MediaStream;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+        }
       }
 
       setCameraActive(false);
@@ -246,6 +270,7 @@ export default function SparkFace() {
                             playsInline
                             autoPlay
                             muted
+                            style={{ transform: 'scaleX(-1)' }} /* Mirror the camera view */
                           />
                         </>
                       )}
