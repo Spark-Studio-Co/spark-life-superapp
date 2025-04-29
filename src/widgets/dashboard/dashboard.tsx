@@ -6,24 +6,53 @@ import {
   MessageSquare,
   Droplets,
   Mic,
-  Pill,
-  AlertCircle,
   Moon,
   Bell,
+  RefreshCw,
 } from "lucide-react";
 
 import type { QuickAction } from "@/entities/quick-actions/model/types";
-import type { Reminder } from "@/entities/reminder/model/types";
 import { AiRecommendationsWidget } from "../ai-recommendations/ai-recommendations";
 import { QuickActionsWidget } from "../quick-actions/quick-actions";
 import { MainLayout } from "@/shared/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/entities/user/hooks/use-user";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useNotificationSocket } from "@/entities/notification/hooks/use-notification";
 import { RemindersWidget } from "../reminders/reminders";
 
 export const DashboardPage = () => {
   // Получаем данные пользователя
-  const { user, isLoading, isError } = useUser();
+  const { user, isLoading: isUserLoading, isError: isUserError } = useUser();
+
+  // Получаем данные уведомлений через WebSocket
+  const {
+    notifications,
+    isLoading: isNotificationsLoading,
+    error: notificationsError,
+    reconnect,
+    deleteNotification,
+  } = useNotificationSocket();
+
+  // Преобразуем уведомления в формат напоминаний
+  const remindersFromNotifications: any = notifications.map((notification) => {
+    const isAlert = notification.type === "alert";
+
+    return {
+      id: notification.id.toString(),
+      title: notification.title,
+      description: notification.isCompleted
+        ? "Выполнено"
+        : isAlert
+        ? `Вчера вы пропустили приём ${notification.title}`
+        : `Следующий приём через ${notification.time}`,
+      time: notification.time,
+      isAlert,
+      isCompleted: notification.isCompleted,
+      type: notification.type,
+    };
+  });
 
   // Данные для быстрых кнопок
   const quickActions: QuickAction[] = [
@@ -78,33 +107,6 @@ export const DashboardPage = () => {
     "Пройдитесь 10 минут для улучшения кровообращения",
   ];
 
-  // Данные для напоминаний
-  const reminders: Reminder[] = [
-    {
-      id: "metformin",
-      title: "Метформин",
-      description: "Следующий приём через 2 часа",
-      time: "2 часа",
-      icon: (
-        <div className="p-2 rounded-full bg-amber-100">
-          <Pill className="h-4 w-4 text-amber-500" />
-        </div>
-      ),
-    },
-    {
-      id: "missed",
-      title: "Пропущенный приём",
-      description: "Вчера вы пропустили приём Амлодипина",
-      time: "вчера",
-      isAlert: true,
-      icon: (
-        <div className="p-2 rounded-full bg-red-100">
-          <AlertCircle className="h-4 w-4 text-red-500" />
-        </div>
-      ),
-    },
-  ];
-
   // Получаем приветствие в зависимости от времени суток
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -112,6 +114,19 @@ export const DashboardPage = () => {
     if (hour < 12) return "Доброе утро";
     if (hour < 18) return "Добрый день";
     return "Добрый вечер";
+  };
+
+  // Обработчик для удаления напоминания
+  const handleDeleteReminder = async (id: string) => {
+    await deleteNotification(Number(id));
+  };
+
+  // Обработчик для отметки напоминания как выполненного
+  const handleCompleteReminder = async (id: string) => {
+    // Здесь можно добавить логику для отметки напоминания как выполненного
+    console.log("Reminder completed:", id);
+    // Например:
+    // await markAsCompleted(Number(id))
   };
 
   return (
@@ -124,12 +139,12 @@ export const DashboardPage = () => {
           className="flex items-center justify-between"
         >
           <div>
-            {isLoading ? (
+            {isUserLoading ? (
               <>
                 <Skeleton className="h-8 w-64 bg-white/30 mb-2" />
                 <Skeleton className="h-5 w-80 bg-white/20" />
               </>
-            ) : isError ? (
+            ) : isUserError ? (
               <div className="text-white">
                 <p className="text-xl font-medium">
                   Не удалось загрузить данные
@@ -149,7 +164,32 @@ export const DashboardPage = () => {
         </motion.div>
       </div>
       <div className="px-6 mt-8 mb-8 space-y-[48px]">
-        <RemindersWidget reminders={reminders} />
+        {notificationsError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle className="flex items-center gap-2">
+              Ошибка соединения
+            </AlertTitle>
+            <AlertDescription className="flex flex-col gap-2">
+              <p>Не удалось подключиться к серверу уведомлений.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={reconnect}
+                className="self-start"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                Повторить подключение
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <RemindersWidget
+          reminders={remindersFromNotifications}
+          isLoading={isNotificationsLoading}
+          onCompleteReminder={handleCompleteReminder}
+          onDeleteReminder={handleDeleteReminder}
+        />
         <QuickActionsWidget actions={quickActions} />
         <AiRecommendationsWidget recommendations={aiRecommendations} />
       </div>

@@ -1,14 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Heart,
-  Activity,
-  Brain,
-  TrendingDown,
-  Info,
-  ArrowDown,
-} from "lucide-react";
+import { Activity, Brain, Info, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -18,11 +11,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  ComposedChart,
   Area,
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
@@ -34,17 +22,6 @@ import {
 } from "@/components/ui/tooltip";
 
 export const VitalsTab = () => {
-  // Sample data
-  const bloodPressureData = [
-    { date: "01.05", systolic: 120, diastolic: 80 },
-    { date: "02.05", systolic: 118, diastolic: 78 },
-    { date: "03.05", systolic: 122, diastolic: 82 },
-    { date: "04.05", systolic: 121, diastolic: 79 },
-    { date: "05.05", systolic: 119, diastolic: 80 },
-    { date: "06.05", systolic: 123, diastolic: 81 },
-    { date: "07.05", systolic: 120, diastolic: 80 },
-  ];
-
   const weightData = [
     { date: "01.04", value: 65.8 },
     { date: "08.04", value: 65.5 },
@@ -53,12 +30,6 @@ export const VitalsTab = () => {
     { date: "29.04", value: 64.7 },
     { date: "06.05", value: 64.5 },
     { date: "13.05", value: 64.3 },
-  ];
-
-  const stressData = [
-    { name: "Низкий", value: 60, color: "#4ade80" },
-    { name: "Средний", value: 30, color: "#facc15" },
-    { name: "Высокий", value: 10, color: "#f87171" },
   ];
 
   const containerVariants = {
