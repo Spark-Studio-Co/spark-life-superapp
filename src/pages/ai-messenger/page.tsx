@@ -16,6 +16,8 @@ import { QuickPrompt } from "@/entities/ai-assistant/ui/quick-prompt";
 import { useAiAssistant } from "@/entities/ai-assistant/api/use-ai-assistant";
 import ava from "@/assets/avatar.png";
 
+// test
+
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
