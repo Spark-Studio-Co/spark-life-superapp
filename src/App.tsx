@@ -25,6 +25,7 @@ import { ClinicDoctors } from "./pages/clinics-doctors-page/clinics-doctors-page
 import ChatPage from "./pages/ai-messenger/page";
 import { DocumentsPage } from "./pages/documents/page";
 import { SettingsPage } from "./pages/settings/page";
+import VoiceAnalysisResultsPage from "./pages/voice-analysis-results/page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -82,6 +83,7 @@ function App() {
 
         {/* Public routes - accessible to everyone */}
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
+        <Route path="/voice-analysis-results" element={<VoiceAnalysisResultsPage />} />
 
         {/* Protected routes - require authentication */}
         <Route

@@ -8,6 +8,10 @@ import { Orb } from "@/components/ui/orb";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, Mic } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
+
+import { useAuthData } from "@/entities/auth/model/use-auth-store";
+import { apiClient } from "@/shared/api/apiClient";
 
 // Вопросы для анализа
 const questions = [
@@ -22,7 +26,9 @@ interface AudioRecording {
 }
 
 export function VoiceAnalysis() {
+  const { token } = useAuthData()
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -160,40 +166,65 @@ export function VoiceAnalysis() {
     };
   };
 
-  // Функция для отправки аудиозаписей на сервер
   const submitRecordings = async (finalRecordings: AudioRecording[]) => {
     setIsSubmitting(true);
 
     try {
-      // Здесь будет реальный запрос к API
-      console.log(
-        "Отправка аудиозаписей на сервер:",
-        finalRecordings.map((r) => r.url)
-      );
+      const formData = new FormData();
 
-      // Здесь можно было бы отправить файлы на сервер через FormData
-      // const formData = new FormData()
-      // finalRecordings.forEach((recording, index) => {
-      //     formData.append(`audio_${index}`, recording.blob, `question_${index}.webm`)
-      // })
-      // await fetch('/api/submit-audio', { method: 'POST', body: formData })
+      // Добавляем каждую запись в formData
+      finalRecordings.forEach((recording, index) => {
+        formData.append('audios', recording.blob, `audio_${index}.webm`);
+      });
 
-      // Имитация запроса к серверу
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await apiClient.post('/speech-to-text/analyze-anxiety', formData);
 
+      console.log('Ответ от API:', response.data);
+      const data = response.data;
+
+
+      const analysisResults = data;
+
+      // Сохраняем результаты в localStorage
+      localStorage.setItem('voice_analysis_results', JSON.stringify(analysisResults));
+
+      // Устанавливаем состояние завершения
       setIsComplete(true);
+
+      setTimeout(() => {
+        navigate('/voice-analysis-results');
+      }, 1500);
+
     } catch (error) {
       console.error("Ошибка при отправке данных:", error);
+
+      // Более детальная обработка ошибок Axios
+      let errorMessage = "Пожалуйста, попробуйте снова позже.";
+
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // Сервер вернул ответ со статусом, отличным от 2xx
+          console.error("Ошибка ответа:", error.response.data);
+          errorMessage = `Ошибка сервера: ${error.response.status}. Попробуйте позже.`;
+        } else if (error.request) {
+          // Запрос был сделан, но ответ не получен
+          console.error("Нет ответа от сервера:", error.request);
+          errorMessage = "Нет ответа от сервера. Проверьте подключение к интернету.";
+        } else {
+          // Произошла ошибка при настройке запроса
+          console.error("Ошибка настройки запроса:", error.message);
+        }
+      }
+
       toast({
         title: "Ошибка при отправке аудио",
-        description: "Пожалуйста, попробуйте снова позже.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
   // Функция для перезапуска анализа
   const restartAnalysis = () => {
     setCurrentStep(0);
@@ -218,7 +249,7 @@ export function VoiceAnalysis() {
   return (
     <div className="relative flex flex-col items-center">
       <AnimatePresence mode="wait">
-        {!isComplete ? (
+        {!isComplete && (
           <motion.div
             key="analysis"
             initial={{ opacity: 0, y: 20 }}
@@ -315,42 +346,76 @@ export function VoiceAnalysis() {
             </div>
 
             {isSubmitting && (
-              <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center rounded-lg">
-                <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
-                <p className="text-center text-muted-foreground">
-                  Отправка данных...
-                </p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg z-50"
+              >
+                <div className="relative">
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 180, 360]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary mb-6"
+                  />
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      opacity: [0.7, 1, 0.7]
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <Mic className="h-6 w-6 text-primary" />
+                  </motion.div>
+                </div>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center font-medium text-primary mb-2"
+                >
+                  Анализируем ваши ответы
+                </motion.p>
+
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "200px" }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut"
+                  }}
+                  className="h-1 bg-gradient-to-r from-blue-500 to-primary rounded-full mt-2"
+                />
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    times: [0, 0.5, 1]
+                  }}
+                  className="text-xs text-muted-foreground mt-6"
+                >
+                  Это может занять несколько секунд
+                </motion.p>
+              </motion.div>
             )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="complete"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center text-center"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{
-                type: "spring",
-                stiffness: 200,
-                damping: 20,
-                delay: 0.2,
-              }}
-              className="bg-primary/10 rounded-full p-6 mb-6"
-            >
-              <CheckCircle className="h-16 w-16 text-primary" />
-            </motion.div>
-
-            <h2 className="text-2xl font-bold mb-2">Спасибо за прохождение!</h2>
-            <p className="text-muted-foreground mb-6">
-              Ваши ответы были успешно отправлены для анализа. Результаты будут
-              доступны в ближайшее время.
-            </p>
-
-            <Button onClick={restartAnalysis}>Пройти снова</Button>
           </motion.div>
         )}
       </AnimatePresence>
