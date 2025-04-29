@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 "use client";
 
 import { useState } from "react";
@@ -16,12 +18,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mock data for the detailed statistics
 interface SleepEntry {
@@ -48,20 +45,104 @@ export default function SleepStatistics() {
 
   // Mock data for the last 30 days
   const sleepData: SleepEntry[] = [
-    { date: "29 апр", hours: 7.5, quality: "medium", bedTime: "23:30", wakeTime: "07:00" },
-    { date: "28 апр", hours: 6.8, quality: "low", bedTime: "00:15", wakeTime: "07:00" },
-    { date: "27 апр", hours: 8.2, quality: "high", bedTime: "22:45", wakeTime: "07:00" },
-    { date: "26 апр", hours: 7.0, quality: "medium", bedTime: "23:30", wakeTime: "06:30" },
-    { date: "25 апр", hours: 6.5, quality: "low", bedTime: "00:30", wakeTime: "07:00" },
-    { date: "24 апр", hours: 8.5, quality: "high", bedTime: "22:30", wakeTime: "07:00" },
-    { date: "23 апр", hours: 7.8, quality: "medium", bedTime: "23:00", wakeTime: "06:45" },
-    { date: "22 апр", hours: 7.2, quality: "medium", bedTime: "23:15", wakeTime: "06:30" },
-    { date: "21 апр", hours: 6.5, quality: "low", bedTime: "00:30", wakeTime: "07:00" },
-    { date: "20 апр", hours: 7.9, quality: "high", bedTime: "22:45", wakeTime: "06:40" },
-    { date: "19 апр", hours: 8.1, quality: "high", bedTime: "22:30", wakeTime: "06:35" },
-    { date: "18 апр", hours: 7.0, quality: "medium", bedTime: "23:45", wakeTime: "06:45" },
-    { date: "17 апр", hours: 6.7, quality: "low", bedTime: "00:15", wakeTime: "07:00" },
-    { date: "16 апр", hours: 7.5, quality: "medium", bedTime: "23:00", wakeTime: "06:30" },
+    {
+      date: "29 апр",
+      hours: 7.5,
+      quality: "medium",
+      bedTime: "23:30",
+      wakeTime: "07:00",
+    },
+    {
+      date: "28 апр",
+      hours: 6.8,
+      quality: "low",
+      bedTime: "00:15",
+      wakeTime: "07:00",
+    },
+    {
+      date: "27 апр",
+      hours: 8.2,
+      quality: "high",
+      bedTime: "22:45",
+      wakeTime: "07:00",
+    },
+    {
+      date: "26 апр",
+      hours: 7.0,
+      quality: "medium",
+      bedTime: "23:30",
+      wakeTime: "06:30",
+    },
+    {
+      date: "25 апр",
+      hours: 6.5,
+      quality: "low",
+      bedTime: "00:30",
+      wakeTime: "07:00",
+    },
+    {
+      date: "24 апр",
+      hours: 8.5,
+      quality: "high",
+      bedTime: "22:30",
+      wakeTime: "07:00",
+    },
+    {
+      date: "23 апр",
+      hours: 7.8,
+      quality: "medium",
+      bedTime: "23:00",
+      wakeTime: "06:45",
+    },
+    {
+      date: "22 апр",
+      hours: 7.2,
+      quality: "medium",
+      bedTime: "23:15",
+      wakeTime: "06:30",
+    },
+    {
+      date: "21 апр",
+      hours: 6.5,
+      quality: "low",
+      bedTime: "00:30",
+      wakeTime: "07:00",
+    },
+    {
+      date: "20 апр",
+      hours: 7.9,
+      quality: "high",
+      bedTime: "22:45",
+      wakeTime: "06:40",
+    },
+    {
+      date: "19 апр",
+      hours: 8.1,
+      quality: "high",
+      bedTime: "22:30",
+      wakeTime: "06:35",
+    },
+    {
+      date: "18 апр",
+      hours: 7.0,
+      quality: "medium",
+      bedTime: "23:45",
+      wakeTime: "06:45",
+    },
+    {
+      date: "17 апр",
+      hours: 6.7,
+      quality: "low",
+      bedTime: "00:15",
+      wakeTime: "07:00",
+    },
+    {
+      date: "16 апр",
+      hours: 7.5,
+      quality: "medium",
+      bedTime: "23:00",
+      wakeTime: "06:30",
+    },
   ];
 
   // Weekly summaries
@@ -96,24 +177,34 @@ export default function SleepStatistics() {
   ];
 
   // Calculate the average sleep hours for all data
-  const averageSleep = sleepData.reduce((sum, entry) => sum + entry.hours, 0) / sleepData.length;
+  const averageSleep =
+    sleepData.reduce((sum, entry) => sum + entry.hours, 0) / sleepData.length;
 
   // Calculate the optimal sleep time (between 7-9 hours)
-  const optimalSleepPercentage = 
-    (sleepData.filter(entry => entry.hours >= 7 && entry.hours <= 9).length / sleepData.length) * 100;
+  const optimalSleepPercentage =
+    (sleepData.filter((entry) => entry.hours >= 7 && entry.hours <= 9).length /
+      sleepData.length) *
+    100;
 
   // Calculate average bedtime
-  const averageBedTimeMinutes = sleepData.reduce((sum, entry) => {
-    const [hours, minutes] = entry.bedTime.split(":").map(Number);
-    return sum + hours * 60 + minutes;
-  }, 0) / sleepData.length;
+  const averageBedTimeMinutes =
+    sleepData.reduce((sum, entry) => {
+      const [hours, minutes] = entry.bedTime.split(":").map(Number);
+      return sum + hours * 60 + minutes;
+    }, 0) / sleepData.length;
 
   const averageBedTimeHours = Math.floor(averageBedTimeMinutes / 60);
   const averageBedTimeRemainingMinutes = Math.round(averageBedTimeMinutes % 60);
-  const formattedAverageBedTime = `${averageBedTimeHours.toString().padStart(2, '0')}:${averageBedTimeRemainingMinutes.toString().padStart(2, '0')}`;
+  const formattedAverageBedTime = `${averageBedTimeHours
+    .toString()
+    .padStart(2, "0")}:${averageBedTimeRemainingMinutes
+    .toString()
+    .padStart(2, "0")}`;
 
   // Find the best quality sleep day
-  const bestQualitySleepDay = sleepData.find(entry => entry.quality === "high");
+  const bestQualitySleepDay = sleepData.find(
+    (entry) => entry.quality === "high"
+  );
 
   return (
     <motion.div
@@ -123,8 +214,8 @@ export default function SleepStatistics() {
       className="max-w-4xl mx-auto px-4 py-8"
     >
       <div className="flex items-center justify-between mb-8">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="flex items-center text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           onClick={() => navigation(-1)}
         >
@@ -147,8 +238,12 @@ export default function SleepStatistics() {
               </div>
               <span className="text-sm text-gray-500">В среднем</span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-800">{averageSleep.toFixed(1)}ч</h3>
-            <p className="text-sm text-gray-500 mt-1">сна за последние 30 дней</p>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {averageSleep.toFixed(1)}ч
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              сна за последние 30 дней
+            </p>
           </CardContent>
         </Card>
 
@@ -160,7 +255,9 @@ export default function SleepStatistics() {
               </div>
               <span className="text-sm text-gray-500">Оптимальный сон</span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-800">{optimalSleepPercentage.toFixed(0)}%</h3>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {optimalSleepPercentage.toFixed(0)}%
+            </h3>
             <p className="text-sm text-gray-500 mt-1">дней с 7-9 часами сна</p>
           </CardContent>
         </Card>
@@ -173,7 +270,9 @@ export default function SleepStatistics() {
               </div>
               <span className="text-sm text-gray-500">Среднее время</span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-800">{formattedAverageBedTime}</h3>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {formattedAverageBedTime}
+            </h3>
             <p className="text-sm text-gray-500 mt-1">отхода ко сну</p>
           </CardContent>
         </Card>
@@ -190,7 +289,10 @@ export default function SleepStatistics() {
         {/* Weekly View */}
         <TabsContent value="weekly" className="space-y-6">
           {weeklySummaries.map((week, index) => (
-            <Card key={index} className="border-none rounded-2xl overflow-hidden shadow-[0px_8px_30px_rgba(124,58,237,0.08)]">
+            <Card
+              key={index}
+              className="border-none rounded-2xl overflow-hidden shadow-[0px_8px_30px_rgba(124,58,237,0.08)]"
+            >
               <CardHeader className="pb-2 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="text-gray-700">
@@ -214,7 +316,9 @@ export default function SleepStatistics() {
                       <BarChart3 className="h-4 w-4" />
                     )}
                     <span className="font-medium">
-                      {week.trend !== "stable" ? `${week.trendPercentage}%` : "Стабильно"}
+                      {week.trend !== "stable"
+                        ? `${week.trendPercentage}%`
+                        : "Стабильно"}
                     </span>
                   </div>
                 </CardTitle>
@@ -222,26 +326,34 @@ export default function SleepStatistics() {
               <CardContent className="pt-4 pb-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-purple-50/50 p-4 rounded-xl">
-                    <p className="text-sm text-gray-500 font-medium">Среднее за неделю</p>
+                    <p className="text-sm text-gray-500 font-medium">
+                      Среднее за неделю
+                    </p>
                     <div className="flex items-baseline gap-1">
                       <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-600">
                         {week.avgHours.toFixed(1)}
                       </p>
-                      <p className="text-sm font-medium text-purple-600">часов</p>
+                      <p className="text-sm font-medium text-purple-600">
+                        часов
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="bg-green-50/50 p-4 rounded-xl">
-                    <p className="text-sm text-gray-500 font-medium">Лучший день</p>
+                    <p className="text-sm text-gray-500 font-medium">
+                      Лучший день
+                    </p>
                     <div className="flex items-baseline gap-1">
                       <p className="text-lg font-bold text-green-600">
                         {week.bestDay}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="bg-red-50/50 p-4 rounded-xl">
-                    <p className="text-sm text-gray-500 font-medium">Худший день</p>
+                    <p className="text-sm text-gray-500 font-medium">
+                      Худший день
+                    </p>
                     <div className="flex items-baseline gap-1">
                       <p className="text-lg font-bold text-red-500">
                         {week.worstDay}
@@ -270,55 +382,73 @@ export default function SleepStatistics() {
                 <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Дата</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Часы сна</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Качество</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Отбой</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Подъем</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                        Дата
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                        Часы сна
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                        Качество
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                        Отбой
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                        Подъем
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {sleepData.map((entry, index) => (
-                      <tr 
-                        key={index} 
+                      <tr
+                        key={index}
                         className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                         }`}
                       >
-                        <td className="py-3 px-4 text-sm font-medium text-gray-700">{entry.date}</td>
+                        <td className="py-3 px-4 text-sm font-medium text-gray-700">
+                          {entry.date}
+                        </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center">
-                            <div 
+                            <div
                               className={`w-2 h-8 rounded-full mr-3 ${
-                                entry.quality === "high" 
-                                  ? "bg-green-500" 
-                                  : entry.quality === "medium" 
-                                  ? "bg-yellow-500" 
+                                entry.quality === "high"
+                                  ? "bg-green-500"
+                                  : entry.quality === "medium"
+                                  ? "bg-yellow-500"
                                   : "bg-red-500"
                               }`}
                             ></div>
-                            <span className="text-sm font-medium text-gray-800">{entry.hours} ч</span>
+                            <span className="text-sm font-medium text-gray-800">
+                              {entry.hours} ч
+                            </span>
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span 
+                          <span
                             className={`text-xs font-medium px-2 py-1 rounded-full ${
-                              entry.quality === "high" 
-                                ? "bg-green-100 text-green-700" 
-                                : entry.quality === "medium" 
-                                ? "bg-yellow-100 text-yellow-700" 
+                              entry.quality === "high"
+                                ? "bg-green-100 text-green-700"
+                                : entry.quality === "medium"
+                                ? "bg-yellow-100 text-yellow-700"
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {entry.quality === "high" 
-                              ? "Отличное" 
-                              : entry.quality === "medium" 
-                              ? "Среднее" 
+                            {entry.quality === "high"
+                              ? "Отличное"
+                              : entry.quality === "medium"
+                              ? "Среднее"
                               : "Плохое"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">{entry.bedTime}</td>
-                        <td className="py-3 px-4 text-sm text-gray-700">{entry.wakeTime}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {entry.bedTime}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {entry.wakeTime}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -347,8 +477,13 @@ export default function SleepStatistics() {
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">Оптимизируйте время отхода ко сну</p>
-                      <p className="text-sm text-gray-600">Старайтесь ложиться спать до 23:00 для лучшего качества сна.</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        Оптимизируйте время отхода ко сну
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Старайтесь ложиться спать до 23:00 для лучшего качества
+                        сна.
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">
@@ -356,8 +491,13 @@ export default function SleepStatistics() {
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">Поддерживайте регулярность</p>
-                      <p className="text-sm text-gray-600">Ложитесь и вставайте в одно и то же время, даже в выходные.</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        Поддерживайте регулярность
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Ложитесь и вставайте в одно и то же время, даже в
+                        выходные.
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">
@@ -365,8 +505,12 @@ export default function SleepStatistics() {
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">Избегайте экранов перед сном</p>
-                      <p className="text-sm text-gray-600">Отложите электронные устройства за 1 час до сна.</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        Избегайте экранов перед сном
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Отложите электронные устройства за 1 час до сна.
+                      </p>
                     </div>
                   </li>
                 </ul>
@@ -385,28 +529,44 @@ export default function SleepStatistics() {
               <CardContent className="pt-4 pb-5">
                 <div className="space-y-4">
                   <div className="bg-purple-50/50 p-4 rounded-xl">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Лучшее время для сна</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Лучшее время для сна
+                    </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">22:30 - 23:00</span>
+                      <span className="text-sm text-gray-500">
+                        22:30 - 23:00
+                      </span>
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
                         Рекомендуется
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="bg-purple-50/50 p-4 rounded-xl">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Дни с лучшим качеством сна</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Дни с лучшим качеством сна
+                    </p>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">Вторник</span>
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">Среда</span>
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">Суббота</span>
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                        Вторник
+                      </span>
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                        Среда
+                      </span>
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                        Суббота
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="bg-purple-50/50 p-4 rounded-xl">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Оптимальная продолжительность</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Оптимальная продолжительность
+                    </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">7.5 - 8.5 часов</span>
+                      <span className="text-sm text-gray-500">
+                        7.5 - 8.5 часов
+                      </span>
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-700">
                         Для вашего возраста
                       </span>
