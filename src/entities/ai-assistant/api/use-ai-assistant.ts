@@ -1,9 +1,9 @@
-import { getMe } from "./../../../../../shipager/shipager-front/src/entities/auth/api/get/me.api";
-("use client");
+"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { Message } from "../model/types";
 import { apiClient } from "@/shared/api/apiClient";
+import { userService } from "@/entities/user/api/user.api";
 
 interface IGetMeRDO {
   firstName: string;
@@ -17,12 +17,19 @@ export const useAiAssistant = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [userProfile, setUserProfile] = useState<IGetMeRDO | null>(null);
 
-  // Загружаем данные пользователя один раз при монтировании
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const profile = await getMe();
-        setUserProfile(profile);
+        const profile = await userService.getMe();
+
+        const userProfile = {
+          firstName: profile.first_name, // исправил правильно
+          lastName: profile.last_name,
+          phone: profile.phone,
+          email: profile.email,
+        };
+
+        setUserProfile(userProfile);
       } catch (error) {
         console.error("Failed to fetch user profile", error);
       }
@@ -33,6 +40,11 @@ export const useAiAssistant = () => {
 
   const sendMessage = useCallback(
     async (text: string) => {
+      if (!userProfile) {
+        console.error("User profile is not loaded yet");
+        return;
+      }
+
       const userMessage: Message = {
         id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         text,
@@ -45,14 +57,15 @@ export const useAiAssistant = () => {
       setIsTyping(true);
 
       try {
-        if (!userProfile) {
-          throw new Error("User profile is not loaded yet");
-        }
-
-        const response = await apiClient.post<Message>("/user/ai-assistance", {
+        const payload = {
           query: text,
-          user: userProfile, // Передаем еще и личные данные пользователя
-        });
+          user: userProfile, // правильный чистый user
+        };
+
+        const response = await apiClient.post<Message>(
+          "/user/ai-assistance",
+          payload
+        );
 
         const aiMessage = response.data;
 
