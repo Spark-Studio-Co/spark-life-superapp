@@ -34,13 +34,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 // Обновляем импорт хука useNotifications
 import { useAuthData } from "@/entities/auth/model/use-auth-store";
-import { useNotifications } from "@/entities/notification/hooks/use-notification";
+import { useNotificationSocket } from "@/entities/notification/hooks/use-notification";
+// import { useNotifications } from "@/entities/notification/hooks/use-notification";
 
 export function NewReminderPage() {
   const navigate = useNavigate();
   const { userId } = useAuthData();
   const { createNotification, isCreating, mapReminderTypeToNotificationType } =
-    useNotifications();
+    useNotificationSocket();
 
   const [reminderType, setReminderType] = useState("medication");
   const [reminderTime, setReminderTime] = useState("08:00");

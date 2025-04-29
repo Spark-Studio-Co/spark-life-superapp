@@ -1,41 +1,76 @@
+//@ts-nocheck
+
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Phone, Plus } from "lucide-react";
+import { Calendar, Clock, MapPin, Phone, Plus, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MainLayout } from "@/shared/ui/layout";
 
-export const AppointmentsPage = () => {
-  const appointments = [
-    {
-      id: 1,
-      doctor: "Др. Елена Смирнова",
-      specialty: "Терапевт",
-      date: "Завтра, 15 мая 2023",
-      time: "10:00 - 10:30",
-      location: "Клиника Spark Health, ул. Медицинская, 123",
-      phone: "+7 (555) 123-4567",
-    },
-    {
-      id: 2,
-      doctor: "Др. Михаил Иванов",
-      specialty: "Стоматолог",
-      date: "2 июня 2023",
-      time: "14:00 - 15:00",
-      location: "Стоматология Bright Smile, ул. Здоровья, 456",
-      phone: "+7 (555) 987-6543",
-    },
-  ];
+import { useAuthData } from "@/entities/auth/model/use-auth-store";
+import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { ru } from "date-fns/locale";
+import { useAppointments } from "@/entities/appointments/hooks/use-appointment";
+import { AppointmentModal } from "@/entities/appointments/ui/appointment-modal";
 
-  const pastAppointments = [
-    {
-      id: 3,
-      doctor: "Др. Елена Смирнова",
-      specialty: "Терапевт",
-      date: "10 апреля 2023",
-      time: "09:00 - 10:00",
-    },
-  ];
+// Временный список врачей для модального окна
+// В реальном приложении это должно приходить с API
+const doctors = [
+  { id: 1, name: "Др. Елена Смирнова", specialty: "Терапевт" },
+  { id: 2, name: "Др. Михаил Иванов", specialty: "Стоматолог" },
+  { id: 3, name: "Др. Анна Петрова", specialty: "Кардиолог" },
+  { id: 4, name: "Др. Сергей Козлов", specialty: "Невролог" },
+  { id: 5, name: "Др. Ольга Соколова", specialty: "Офтальмолог" },
+];
+
+export const AppointmentsPage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { userId } = useAuthData();
+  const { useUserAppointments, cancelAppointment } = useAppointments();
+
+  const {
+    data: appointments,
+    isLoading,
+    isError,
+    error,
+  } = useUserAppointments(userId);
+
+  const formatAppointmentDate = (dateString: string) => {
+    const date = parseISO(dateString);
+    if (isToday(date)) {
+      return "Сегодня";
+    } else if (isTomorrow(date)) {
+      return "Завтра";
+    } else {
+      return format(date, "d MMMM yyyy", { locale: ru });
+    }
+  };
+
+  const formatAppointmentTime = (dateString: string) => {
+    const date = parseISO(dateString);
+    return format(date, "HH:mm", { locale: ru });
+  };
+
+  // Разделяем записи на предстоящие и прошедшие
+  const currentDate = new Date();
+  const upcomingAppointments =
+    appointments?.filter(
+      (appointment) => new Date(appointment.date) >= currentDate
+    ) || [];
+
+  const pastAppointments =
+    appointments?.filter(
+      (appointment) => new Date(appointment.date) < currentDate
+    ) || [];
+
+  const handleCancelAppointment = async (id: number) => {
+    try {
+      await cancelAppointment.mutateAsync(id);
+    } catch (error) {
+      console.error("Failed to cancel appointment:", error);
+    }
+  };
 
   return (
     <MainLayout>
@@ -47,91 +82,167 @@ export const AppointmentsPage = () => {
       <div className="p-4 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Предстоящие</h2>
-          <Button variant="outline" size="sm" className="gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            onClick={() => setIsModalOpen(true)}
+          >
             <Plus className="h-4 w-4" />
             Новая запись
           </Button>
         </div>
 
-        {appointments.map((appointment, index) => (
-          <motion.div
-            key={appointment.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-white rounded-xl shadow-md overflow-hidden"
-          >
-            <div className="p-4">
-              <h3 className="font-semibold text-lg">{appointment.doctor}</h3>
-              <p className="text-gray-500 text-sm">{appointment.specialty}</p>
-              <div className="space-y-2 mt-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-blue-500" />
-                  <span>{appointment.date}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-blue-500" />
-                  <span>{appointment.time}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-blue-500" />
-                  <span>{appointment.location}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-blue-500" />
-                  <span>{appointment.phone}</span>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          </div>
+        ) : isError ? (
+          <div className="bg-red-50 p-4 rounded-lg text-red-500">
+            Ошибка при загрузке записей:{" "}
+            {error?.message || "Неизвестная ошибка"}
+          </div>
+        ) : upcomingAppointments.length === 0 ? (
+          <div className="bg-blue-50 p-4 rounded-lg text-center">
+            <p className="text-blue-500">
+              У вас нет предстоящих записей к врачу
+            </p>
+            <Button
+              variant="link"
+              className="mt-2"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Записаться на прием
+            </Button>
+          </div>
+        ) : (
+          upcomingAppointments.map((appointment: any, index: number) => (
+            <motion.div
+              key={appointment.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+              className="bg-white rounded-xl shadow-md overflow-hidden"
+            >
+              <div className="p-4">
+                <h3 className="font-semibold text-lg">
+                  {appointment.doctor?.name || "Врач не указан"}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {appointment.doctor?.specialty || "Специальность не указана"}
+                </p>
+                <div className="space-y-2 mt-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-blue-500" />
+                    <span>{formatAppointmentDate(appointment.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-blue-500" />
+                    <span>{formatAppointmentTime(appointment.date)}</span>
+                  </div>
+                  {appointment.location && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-blue-500" />
+                      <span>{appointment.location}</span>
+                    </div>
+                  )}
+                  {appointment.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-blue-500" />
+                      <span>{appointment.phone}</span>
+                    </div>
+                  )}
+                  {appointment.description && (
+                    <div className="mt-2 text-sm bg-blue-50 p-2 rounded">
+                      <p className="font-medium">Описание:</p>
+                      <p>{appointment.description}</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            <div className="flex border-t">
-              <Button
-                variant="ghost"
-                className="flex-1 rounded-none py-2 h-auto text-sm"
-              >
-                Перенести
-              </Button>
-              <Button
-                variant="ghost"
-                className="flex-1 rounded-none py-2 h-auto text-sm text-red-500 hover:text-red-600 hover:bg-red-50"
-              >
-                Отменить
-              </Button>
-            </div>
-          </motion.div>
-        ))}
+              <div className="flex border-t">
+                <Button
+                  variant="ghost"
+                  className="flex-1 rounded-none py-2 h-auto text-sm"
+                  onClick={() => {
+                    // Здесь можно открыть модальное окно для переноса записи
+                    // с предзаполненными данными текущей записи
+                  }}
+                >
+                  Перенести
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1 rounded-none py-2 h-auto text-sm text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => handleCancelAppointment(appointment.id)}
+                  disabled={cancelAppointment.isPending}
+                >
+                  {cancelAppointment.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      Отмена...
+                    </>
+                  ) : (
+                    "Отменить"
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          ))
+        )}
 
         <h2 className="text-lg font-semibold mt-8">Прошедшие записи</h2>
 
-        {pastAppointments.map((appointment, index) => (
-          <motion.div
-            key={appointment.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 + 0.3 }}
-            className="bg-white rounded-xl shadow-md overflow-hidden opacity-70"
-          >
-            <div className="p-4">
-              <h3 className="font-semibold text-lg">{appointment.doctor}</h3>
-              <p className="text-gray-500 text-sm">{appointment.specialty}</p>
-              <div className="space-y-2 mt-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span>{appointment.date}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <span>{appointment.time}</span>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-5">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          </div>
+        ) : pastAppointments.length === 0 ? (
+          <div className="bg-gray-50 p-4 rounded-lg text-center text-gray-500">
+            У вас нет прошедших записей к врачу
+          </div>
+        ) : (
+          pastAppointments.map((appointment: any, index: number) => (
+            <motion.div
+              key={appointment.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 + 0.3 }}
+              className="bg-white rounded-xl shadow-md overflow-hidden opacity-70"
+            >
+              <div className="p-4">
+                <h3 className="font-semibold text-lg">
+                  {appointment.doctor?.name || "Врач не указан"}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {appointment.doctor?.specialty || "Специальность не указана"}
+                </p>
+                <div className="space-y-2 mt-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span>{formatAppointmentDate(appointment.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-gray-400" />
+                    <span>{formatAppointmentTime(appointment.date)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="border-t p-2">
-              <Button variant="outline" size="sm" className="w-full">
-                Просмотреть заключение
-              </Button>
-            </div>
-          </motion.div>
-        ))}
+              <div className="border-t p-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  Просмотреть заключение
+                </Button>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
+
+      <AppointmentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        doctors={doctors}
+      />
     </MainLayout>
   );
 };

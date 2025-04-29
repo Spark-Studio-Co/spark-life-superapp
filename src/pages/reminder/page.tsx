@@ -1,8 +1,10 @@
-"use client"
+//@ts-nocheck
 
-import { useState, useEffect, type JSX } from "react"
-import { motion } from "framer-motion"
-import { Link } from "react-router-dom"
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Bell,
   Search,
@@ -14,136 +16,105 @@ import {
   Pill,
   Stethoscope,
   RefreshCw,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { Reminder } from "@/entities/reminder/model/types"
-import { useNotifications } from "@/entities/notification/hooks/use-notification"
-
-// Extend the Reminder type to include the properties we need
-interface EnhancedReminder extends Reminder {
-  type: string
-  isAlert: boolean
-  icon: JSX.Element
-}
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNotificationSocket } from "@/entities/notification/hooks/use-notification";
 
 export function RemindersPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("all")
-  const [completedReminders, setCompletedReminders] = useState<string[]>([])
-  const [reminders, setReminders] = useState<EnhancedReminder[]>([])
+  // In a real application, you would get the userId from authentication
+  const userId = 1;
 
-  // Use the notifications hook
-  const { notifications, isLoading, error, refetch } = useNotifications()
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
-  // Convert notifications to reminders format
-  useEffect(() => {
-    // Skip processing if notifications are being loaded or there was an error
-    if (isLoading || error) return;
-    
-    if (notifications && notifications.length > 0) {
-      // Create a stable reference to the icons to prevent re-renders
-      const iconMap = {
-        appointment: <Calendar className="h-5 w-5 text-purple-500" />,
-        measurement: <Stethoscope className="h-5 w-5 text-green-500" />,
-        alert: <AlertCircle className="h-5 w-5 text-red-500" />,
-        medication: <Pill className="h-5 w-5 text-blue-500" />,
-        default: <Clock className="h-5 w-5 text-blue-500" />
-      };
-      
-      const mappedReminders = notifications
-        .map((notification) => {
-          if (!notification) {
-            console.error("Notification is undefined", notifications)
-            return null
-          }
+  const {
+    notifications,
+    isConnected,
+    isLoading,
+    error,
+    reconnect,
+    markAsCompleted,
+    fetchNotifications,
+  } = useNotificationSocket();
 
-          // Get the appropriate icon based on notification type
-          const icon = iconMap[notification.type as keyof typeof iconMap] || iconMap.default;
+  // Create a stable reference to the icons to prevent re-renders
+  const iconMap = {
+    appointment: <Calendar className="h-5 w-5 text-purple-500" />,
+    measurement: <Stethoscope className="h-5 w-5 text-green-500" />,
+    alert: <AlertCircle className="h-5 w-5 text-red-500" />,
+    medication: <Pill className="h-5 w-5 text-blue-500" />,
+    default: <Clock className="h-5 w-5 text-blue-500" />,
+  };
 
-          return {
-            id: notification.id ? notification.id.toString() : "", // Safely convert id to string
-            title: notification.title || "",
-            description: notification.description || "",
-            time: notification.time || "",
-            icon,
-            isAlert: notification.type === "alert",
-            type: notification.type,
-            isCompleted: notification.isCompleted || false,
-            end_date: notification.end_date,
-            is_recurring: notification.is_recurring,
-            recurrence_pattern: notification.recurrence_pattern,
-          }
-        })
-        .filter(Boolean) // Remove any null items
-
-      // Update both state values at once to prevent multiple re-renders
-      const completed = mappedReminders
-        .filter((reminder): reminder is NonNullable<typeof reminder> => 
-          reminder !== null && Boolean(reminder.isCompleted))
-        .map(reminder => reminder.id);
-
-      setReminders(mappedReminders as EnhancedReminder[])
-      setCompletedReminders(completed)
-    } else {
-      setReminders([])
-      setCompletedReminders([])
-    }
-  }, [notifications, isLoading, error])
-
-  const filteredReminders = reminders.filter((reminder) => {
+  // Filter notifications based on search query and active tab
+  const filteredNotifications = notifications.filter((notification) => {
     // Filter by search query
     const matchesSearch =
-      reminder.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      reminder.description.toLowerCase().includes(searchQuery.toLowerCase())
+      notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notification.description
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
 
     // Filter by tab
-    if (activeTab === "all") return matchesSearch
-    if (activeTab === "medications") return matchesSearch && reminder.type === "medication"
-    if (activeTab === "measurements") return matchesSearch && reminder.type === "measurement"
-    if (activeTab === "appointments") return matchesSearch && reminder.type === "appointment"
-    if (activeTab === "missed") return matchesSearch && reminder.isAlert
-    if (activeTab === "completed") return matchesSearch && completedReminders.includes(reminder.id)
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "medications")
+      return matchesSearch && notification.type === "medication";
+    if (activeTab === "measurements")
+      return matchesSearch && notification.type === "measurement";
+    if (activeTab === "appointments")
+      return matchesSearch && notification.type === "appointment";
+    if (activeTab === "missed")
+      return matchesSearch && notification.type === "alert";
+    if (activeTab === "completed")
+      return matchesSearch && notification.isCompleted;
 
-    return matchesSearch
-  })
+    return matchesSearch;
+  });
 
-  const ReminderCard = ({ reminder }: { reminder: EnhancedReminder }) => {
+  const handleRetry = () => {
+    reconnect();
+    fetchNotifications();
+  };
+
+  const ReminderCard = ({ notification }: { notification: any }) => {
     const getColors = () => {
-      if (reminder.isAlert) {
+      if (notification.type === "alert") {
         return {
           bg: "bg-red-100",
           text: "text-red-600",
           badge: "bg-red-50 text-red-600 border-red-200",
-        }
+        };
       }
-      switch (reminder.type) {
+      switch (notification.type) {
         case "appointment":
           return {
             bg: "bg-purple-100",
             text: "text-purple-600",
             badge: "bg-purple-50 text-purple-600 border-purple-200",
-          }
+          };
         case "measurement":
           return {
             bg: "bg-green-100",
             text: "text-green-600",
             badge: "bg-green-50 text-green-600 border-green-200",
-          }
+          };
         case "medication":
         default:
           return {
             bg: "bg-blue-100",
             text: "text-blue-600",
             badge: "bg-blue-50 text-blue-600 border-blue-200",
-          }
+          };
       }
-    }
+    };
 
-    const colors = getColors()
+    const colors = getColors();
+    const icon =
+      iconMap[notification.type as keyof typeof iconMap] || iconMap.default;
 
     return (
       <motion.div
@@ -152,28 +123,39 @@ export function RemindersPage() {
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center gap-4 rounded-xl">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${colors.bg}`}>
-            <div className="h-6 w-6 ml-0.5 mt-0.5">{reminder.icon}</div>
+          <div
+            className={`w-14 h-14 rounded-full flex items-center justify-center ${colors.bg}`}
+          >
+            <div className="h-6 w-6 ml-0.5 mt-0.5">{icon}</div>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h3 className={`text-base font-semibold truncate ${colors.text}`}>{reminder.title}</h3>
+              <h3 className={`text-base font-semibold truncate ${colors.text}`}>
+                {notification.title}
+              </h3>
               <Badge variant="outline" className={`${colors.badge} text-xs`}>
-                {reminder.time}
+                {notification.time}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground truncate mt-1">{reminder.description}</p>
+            <p className="text-sm text-muted-foreground truncate mt-1">
+              {notification.description}
+            </p>
           </div>
         </div>
       </motion.div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] p-4 text-white">
         <div className="flex items-center gap-3 mb-4">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/20"
+            asChild
+          >
             <Link to="/">
               <ArrowLeft className="h-5 w-5" />
             </Link>
@@ -184,7 +166,12 @@ export function RemindersPage() {
               Напоминания
             </h1>
           </div>
-          <Button variant="secondary" size="sm" className="bg-white text-blue-600 hover:bg-white/90 shadow-sm" asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-white text-blue-600 hover:bg-white/90 shadow-sm"
+            asChild
+          >
             <Link to="/reminders/new">
               <Plus className="h-4 w-4 mr-1" />
               Добавить
@@ -201,50 +188,85 @@ export function RemindersPage() {
           />
         </div>
       </div>
-      <Tabs defaultValue="all" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        defaultValue="all"
+        className="w-full"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <div className="px-4 pt-4">
           <TabsList className="w-full bg-white border border-gray-100 p-1 rounded-xl shadow-sm">
             <TabsTrigger value="all" className="text-xs rounded-lg font-medium">
               Все
             </TabsTrigger>
-            <TabsTrigger value="medications" className="text-xs rounded-lg font-medium">
+            <TabsTrigger
+              value="medications"
+              className="text-xs rounded-lg font-medium"
+            >
               Лекарства
             </TabsTrigger>
-            <TabsTrigger value="measurements" className="text-xs rounded-lg font-medium">
+            <TabsTrigger
+              value="measurements"
+              className="text-xs rounded-lg font-medium"
+            >
               Измерения
             </TabsTrigger>
-            <TabsTrigger value="appointments" className="text-xs rounded-lg font-medium">
+            <TabsTrigger
+              value="appointments"
+              className="text-xs rounded-lg font-medium"
+            >
               Приемы
             </TabsTrigger>
-            <TabsTrigger value="missed" className="text-xs rounded-lg font-medium">
+            <TabsTrigger
+              value="missed"
+              className="text-xs rounded-lg font-medium"
+            >
               Пропущенные
             </TabsTrigger>
           </TabsList>
         </div>
-        {["all", "medications", "measurements", "appointments", "missed"].map((tab) => {
-          return (
+        {["all", "medications", "measurements", "appointments", "missed"].map(
+          (tab) => (
             <TabsContent key={tab} value={tab} className="mt-0 p-4">
               {isLoading ? (
                 <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
                   <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
                   <p className="text-gray-500">Загрузка напоминаний...</p>
                 </div>
+              ) : !isConnected ? (
+                <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
+                  <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
+                  <p className="text-gray-500">Подключение к серверу...</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={handleRetry}
+                  >
+                    Повторить
+                  </Button>
+                </div>
               ) : error ? (
                 <div className="p-8 text-center">
                   <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
                   <p className="text-red-500">Ошибка загрузки напоминаний</p>
-                  <Button variant="outline" size="sm" className="mt-2" onClick={() => refetch()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={handleRetry}
+                  >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Повторить
                   </Button>
                 </div>
               ) : (
                 <div className="border-none rounded-xl overflow-hidden">
-                  {filteredReminders.length > 0 ? (
+                  {filteredNotifications.length > 0 ? (
                     <div className="space-y-4">
-                      {filteredReminders.map((reminder) => (
-                        <Card key={reminder.id} className="rounded-xl  p-4">
-                          <ReminderCard reminder={reminder} />
+                      {filteredNotifications.map((notification) => (
+                        <Card key={notification.id} className="rounded-xl p-4">
+                          <ReminderCard notification={notification} />
                         </Card>
                       ))}
                     </div>
@@ -258,8 +280,8 @@ export function RemindersPage() {
               )}
             </TabsContent>
           )
-        })}
+        )}
       </Tabs>
     </div>
-  )
+  );
 }
