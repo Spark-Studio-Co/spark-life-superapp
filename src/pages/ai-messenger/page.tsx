@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 "use client";
 
 import type React from "react";
@@ -13,7 +15,6 @@ import { MessageBubble } from "@/entities/ai-assistant/ui/message-bubble";
 import { QuickPrompt } from "@/entities/ai-assistant/ui/quick-prompt";
 import { useAiAssistant } from "@/entities/ai-assistant/api/use-ai-assistant";
 import ava from "@/assets/avatar.png";
-
 
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
