@@ -56,7 +56,6 @@ function App() {
   return (
     <QueryClientProvider client={reactQueryClient}>
       <Routes>
-        {/* Auth routes - only accessible when not logged in */}
         <Route
           path="/login"
           element={
@@ -81,11 +80,11 @@ function App() {
             </AuthRoute>
           }
         />
-        {/* Public routes - accessible to everyone */}
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
-        <Route path="/voice-analysis-results" element={<VoiceAnalysisResultsPage />} />
-
-        {/* Protected routes - require authentication */}
+        <Route
+          path="/voice-analysis-results"
+          element={<VoiceAnalysisResultsPage />}
+        />
         <Route
           path="/"
           element={
@@ -239,7 +238,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Redirect for non-existent routes */}
+
+        <Route
+          path="/admin/appointments"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="*"
           element={<Navigate to={token ? "/" : "/login"} replace />}
