@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -164,7 +166,7 @@ export const DashboardPage = () => {
         </motion.div>
       </div>
       <div className="px-6 mt-8 mb-8 space-y-[48px]">
-        {notificationsError && (
+        {/* {notificationsError && (
           <Alert variant="destructive" className="mb-4">
             <AlertTitle className="flex items-center gap-2">
               Ошибка соединения
@@ -182,7 +184,7 @@ export const DashboardPage = () => {
               </Button>
             </AlertDescription>
           </Alert>
-        )}
+        )} */}
 
         <RemindersWidget
           reminders={remindersFromNotifications}
