@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { useServices } from "@/hooks/use-services";
 import {
   Card,
   CardContent,
@@ -55,6 +54,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "@/components/ui/use-toast";
+import { useGetServices } from "@/entities/services/hooks/use-services";
 
 // Form schema for service
 const serviceFormSchema = z.object({
@@ -79,7 +79,7 @@ export function ServicesView() {
     createService,
     updateService,
     deleteService,
-  } = useServices();
+  } = useGetServices();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

@@ -28,6 +28,7 @@ import { SettingsPage } from "./pages/settings/page";
 import VoiceAnalysisResultsPage from "./pages/voice-analysis-results/page";
 import SleepStatistics from "./pages/sleep/statistics";
 import RecommendedClinicsPage from "./pages/recommendations/page";
+import { AdminPanel } from "./pages/admin-panel/admin-panel";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -249,10 +250,10 @@ function App() {
         />
 
         <Route
-          path="/admin/appointments"
+          path="/admin"
           element={
             <ProtectedRoute>
-              <SettingsPage />
+              <AdminPanel />
             </ProtectedRoute>
           }
         />

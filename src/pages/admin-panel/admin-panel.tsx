@@ -5,12 +5,11 @@
 import { useState } from "react";
 import { useAuthData } from "@/entities/auth/model/use-auth-store";
 import { Navigate } from "react-router-dom";
-import { AdminLayout } from "@/layouts/admin-layout";
+import { AdminLayout } from "@/shared/ui/admin-layout";
 import { DashboardView } from "./views/dashboard-view";
+import { AppointmentsView } from "./views/appointment-view";
 import { DoctorsView } from "./views/doctors-view";
 import { ServicesView } from "./views/services-view";
-import { AppointmentsView } from "./views/appointments-view";
-import { ClinicSettingsView } from "./views/clinic-settings-view";
 
 type AdminView =
   | "dashboard"
@@ -24,9 +23,6 @@ export function AdminPanel() {
   const [currentView, setCurrentView] = useState<AdminView>("dashboard");
 
   // Redirect if not a clinic owner
-  if (role !== "Owner") {
-    return <Navigate to="/login" replace />;
-  }
 
   const renderView = () => {
     switch (currentView) {
@@ -38,8 +34,7 @@ export function AdminPanel() {
         return <ServicesView />;
       case "appointments":
         return <AppointmentsView />;
-      case "settings":
-        return <ClinicSettingsView />;
+
       default:
         return <DashboardView />;
     }

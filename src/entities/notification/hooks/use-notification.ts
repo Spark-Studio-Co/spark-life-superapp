@@ -23,7 +23,7 @@ interface UseNotificationSocketProps {
 }
 
 export function useNotificationSocket({
-  apiUrl = "http://localhost:6001",
+  apiUrl = "https://spark-life-backend-production.up.railway.app/api",
 }: UseNotificationSocketProps = {}) {
   const { userId } = useAuthData();
   const [notifications, setNotifications] = useState<Notification[]>([]);
