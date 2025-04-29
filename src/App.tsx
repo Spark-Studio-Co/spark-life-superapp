@@ -27,6 +27,7 @@ import { DocumentsPage } from "./pages/documents/page";
 import { SettingsPage } from "./pages/settings/page";
 import VoiceAnalysisResultsPage from "./pages/voice-analysis-results/page";
 import SleepStatistics from "./pages/sleep/statistics";
+import RecommendedClinicsPage from "./pages/recommendations/page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -56,7 +57,6 @@ function App() {
   return (
     <QueryClientProvider client={reactQueryClient}>
       <Routes>
-        {/* Auth routes - only accessible when not logged in */}
         <Route
           path="/login"
           element={
@@ -81,16 +81,22 @@ function App() {
             </AuthRoute>
           }
         />
-        {/* Public routes - accessible to everyone */}
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
         <Route path="/voice-analysis-results" element={<VoiceAnalysisResultsPage />} />
 
-        {/* Protected routes - require authentication */}
         <Route
           path="/"
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recommended-clinics"
+          element={
+            <ProtectedRoute>
+              <RecommendedClinicsPage />
             </ProtectedRoute>
           }
         />

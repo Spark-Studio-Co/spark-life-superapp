@@ -18,41 +18,121 @@ interface HydrationBottleProps {
 }
 
 export const HydrationBottle = ({
-  goal = 2500, // Default goal: 2.5L
+  goal: initialGoal = 2500, // Default goal: 2.5L
   initialValue = 0,
   incrementAmount = 250, // Default increment: 250ml
   onUpdate,
 }: HydrationBottleProps) => {
+  // Use state for goal so it can be updated from AI recommendations
+  const [goal, setGoal] = useState(initialGoal);
   const [hydration, setHydration] = useState(initialValue);
   const [showSplash, setShowSplash] = useState(false);
   const [isGoalReached, setIsGoalReached] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [isDataSentToday, setIsDataSentToday] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Check if data was already sent today when component mounts
+  // Local storage keys
+  const HYDRATION_STORAGE_KEY = 'spark-life-hydration';
+  const HYDRATION_GOAL_STORAGE_KEY = 'spark-life-hydration-goal';
+  const HYDRATION_DATE_KEY = 'spark-life-hydration-date';
+
+  // Load data from local storage and check if data was already sent today when component mounts
   useEffect(() => {
-    const checkDataStatus = async () => {
+    const loadFromLocalStorage = () => {
+      try {
+        // Check if we have data saved for today
+        const savedDate = localStorage.getItem(HYDRATION_DATE_KEY);
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        if (savedDate === today) {
+          // We have data for today, load it
+          const savedHydration = localStorage.getItem(HYDRATION_STORAGE_KEY);
+          const savedGoal = localStorage.getItem(HYDRATION_GOAL_STORAGE_KEY);
+          
+          if (savedHydration) {
+            setHydration(Number(savedHydration));
+          }
+          
+          if (savedGoal) {
+            setGoal(Number(savedGoal));
+          }
+          
+          console.log('Loaded hydration data from local storage:', {
+            hydration: savedHydration,
+            goal: savedGoal,
+            date: savedDate
+          });
+          
+          return true; // Data was loaded from local storage
+        }
+        
+        return false; // No data for today in local storage
+      } catch (error) {
+        console.error('Error loading from local storage:', error);
+        return false;
+      }
+    };
+    
+    const fetchUserData = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get('/user/weekly-statistic');
-        // If water data exists for today, disable the component
-        if (response.data && response.data.water) {
-          setIsDataSentToday(true);
+
+        // First get user data to check for recommended water intake
+        const userResponse = await apiClient.get('/user/me');
+        console.log('User data:', userResponse.data);
+
+        // Also try to get AI-based recommendations
+        try {
+          const aiStatsResponse = await apiClient.get('/user/ai-stats');
+          if (aiStatsResponse.data && aiStatsResponse.data.daily_water) {
+            // Extract numeric value from string like "2.5 литра"
+            const waterMatch = aiStatsResponse.data.daily_water.match(/([\d.]+)/);
+            if (waterMatch && waterMatch[1]) {
+              const recommendedWaterLiters = parseFloat(waterMatch[1]);
+              if (!isNaN(recommendedWaterLiters)) {
+                // Convert to ml
+                const recommendedWaterMl = recommendedWaterLiters * 1000;
+                // Update goal if it's valid
+                if (recommendedWaterMl > 0) {
+                  setGoal(recommendedWaterMl);
+                  // Save to local storage
+                  localStorage.setItem(HYDRATION_GOAL_STORAGE_KEY, recommendedWaterMl.toString());
+                }
+              }
+            }
+          }
+        } catch (aiError) {
+          console.error('Error fetching AI recommendations:', aiError);
+          // Continue with default goal
+        }
+
+        // Then check weekly statistics
+        const statsResponse = await apiClient.post('/user/weekly-statistic');
+
+        // If water data exists for today, update the component
+        if (statsResponse.data && statsResponse.data.water) {
           // Convert liters back to ml for display
-          const waterInMl = response.data.water * 1000;
+          const waterInMl = statsResponse.data.water * 1000;
           setHydration(waterInMl); // Update hydration to match server data
+          
+          // Save to local storage
+          localStorage.setItem(HYDRATION_STORAGE_KEY, waterInMl.toString());
+          localStorage.setItem(HYDRATION_DATE_KEY, new Date().toISOString().split('T')[0]);
         }
       } catch (error) {
-        console.error('Error checking hydration data status:', error);
+        console.error('Error fetching user data or hydration status:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    
-    checkDataStatus();
+
+    // First try to load from local storage, if not successful, fetch from API
+    const dataLoaded = loadFromLocalStorage();
+    if (!dataLoaded) {
+      fetchUserData();
+    }
   }, []);
 
   // Calculate fill percentage (max 100%)
@@ -77,13 +157,16 @@ export const HydrationBottle = ({
       await apiClient.post('/user/weekly-statistic', { water: totalWaterAmount });
       console.log(`Updated water statistics to ${totalWaterAmount}L`);
       setIsSaved(true);
-      setIsDataSentToday(true); // Mark that data has been sent today
       
+      // Save to local storage
+      localStorage.setItem(HYDRATION_STORAGE_KEY, hydration.toString());
+      localStorage.setItem(HYDRATION_DATE_KEY, new Date().toISOString().split('T')[0]);
+
       // Keep the saved state visible for a moment
       setTimeout(() => {
         setIsSaved(false);
       }, 3000);
-      
+
       // Call the refetch callback if provided
       if (onUpdate) {
         onUpdate();
@@ -101,17 +184,12 @@ export const HydrationBottle = ({
 
   // Setup debounce effect
   useEffect(() => {
-    // Don't set up debounce if data was already sent today
-    if (isDataSentToday) {
-      return;
-    }
-    
     // Clear any existing timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Only set up debounce if hydration has changed from last sent value
+    // Only set up debounce if hydration has changed from last sent value and is greater than 0
     if (hydration !== lastSentValueRef.current && hydration > 0) {
       setIsSaved(false);
       debounceTimerRef.current = setTimeout(() => {
@@ -126,15 +204,26 @@ export const HydrationBottle = ({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [hydration, onUpdate, isDataSentToday]);
+  }, [hydration, onUpdate]);
 
   // Add water function
   const addWater = () => {
     setShowSplash(true);
 
+    // Ensure values are numbers
+    const currentHydration = isNaN(hydration) ? 0 : Number(hydration);
+    const targetGoal = isNaN(goal) ? 2500 : Number(goal);
+    const increment = isNaN(incrementAmount) ? 250 : Number(incrementAmount);
+
     // Update local state
-    const newHydration = Math.min(hydration + incrementAmount, Number(goal));
+    const newHydration = Math.min(currentHydration + increment, targetGoal);
+    console.log('Adding water:', { currentHydration, increment, newHydration });
+
     setHydration(newHydration);
+    
+    // Save to local storage immediately for a responsive feel
+    localStorage.setItem(HYDRATION_STORAGE_KEY, newHydration.toString());
+    localStorage.setItem(HYDRATION_DATE_KEY, new Date().toISOString().split('T')[0]);
 
     // Hide splash after animation
     setTimeout(() => setShowSplash(false), 1000);
@@ -144,6 +233,12 @@ export const HydrationBottle = ({
   const resetHydration = () => {
     setHydration(0);
     setIsGoalReached(false);
+    
+    // Update local storage
+    localStorage.setItem(HYDRATION_STORAGE_KEY, '0');
+    localStorage.setItem(HYDRATION_DATE_KEY, new Date().toISOString().split('T')[0]);
+    
+    console.log('Hydration reset to 0');
   };
 
   return (
@@ -158,10 +253,10 @@ export const HydrationBottle = ({
         <CardContent className="pt-2 flex flex-col items-center">
           <div className="flex items-end justify-center mb-4">
             <div className="text-3xl font-bold">
-              {(hydration / 1000).toFixed(1)}
+              {isNaN(hydration) ? '0.0' : (hydration / 1000).toFixed(1)}
             </div>
             <div className="text-lg text-gray-500 ml-1">
-              / {goal / 1000} л
+              / {isNaN(goal) ? '2.5' : (goal / 1000)} л
             </div>
           </div>
 
@@ -255,33 +350,32 @@ export const HydrationBottle = ({
           <div className="flex gap-3 w-full">
             <Button
               onClick={addWater}
-              disabled={hydration >= goal || isLoading || isDataSentToday}
+              disabled={hydration >= goal || isLoading}
               className={cn(
                 "flex-1 gap-2",
-                hydration >= goal || isLoading || isDataSentToday
+                hydration >= goal || isLoading
                   ? "bg-gray-300"
                   : "bg-blue-500 hover:bg-blue-600"
               )}
             >
               {isLoading ? (
                 'Сохранение...'
-              ) : isDataSentToday ? (
-                'Данные отправлены'
-              ) : isSaved ? (
-                '✓ Сохранено'
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" />
-                  Добавить {incrementAmount}мл
-                </>
-              )}
+              )
+                : isSaved ? (
+                  '✓ Сохранено'
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Добавить {incrementAmount}мл
+                  </>
+                )}
             </Button>
 
             <Button
               onClick={resetHydration}
               variant="outline"
               className="border-blue-200 text-blue-700 hover:bg-blue-50"
-              disabled={isLoading || isDataSentToday}
+              disabled={isLoading}
             >
               <RotateCcw className="h-4 w-4" />
             </Button>

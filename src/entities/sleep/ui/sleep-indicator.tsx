@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Moon } from "lucide-react";
+import { Moon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { apiClient } from "@/shared/api/apiClient";
@@ -10,35 +10,90 @@ import { apiClient } from "@/shared/api/apiClient";
 interface Props {
   initialHours: number;
   goalHours: number;
+  onUpdate?: () => void;
 }
 
-export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
+export function SleepCircleIndicator({ initialHours, goalHours, onUpdate }: Props) {
   const [hours, setHours] = useState(initialHours);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [isDataSentToday, setIsDataSentToday] = useState(false);
   const percentage = Math.min((hours / goalHours) * 100, 100);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Local storage keys
+  const SLEEP_STORAGE_KEY = 'spark-life-sleep';
+  const SLEEP_DATE_KEY = 'spark-life-sleep-date';
+  
   // Check if data was already sent today when component mounts
   useEffect(() => {
-    const checkDataStatus = async () => {
+    const loadFromLocalStorage = () => {
+      try {
+        // Check if we have data saved for today
+        const savedDate = localStorage.getItem(SLEEP_DATE_KEY);
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        if (savedDate === today) {
+          // We have data for today, load it
+          const savedHours = localStorage.getItem(SLEEP_STORAGE_KEY);
+          
+          if (savedHours) {
+            setHours(Number(savedHours));
+          }
+          
+          console.log('Loaded sleep data from local storage:', {
+            hours: savedHours,
+            date: savedDate
+          });
+          
+          return true; // Data was loaded from local storage
+        }
+        
+        return false; // No data for today in local storage
+      } catch (error) {
+        console.error('Error loading from local storage:', error);
+        return false;
+      }
+    };
+    
+    const fetchUserData = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get('/user/weekly-statistic');
-        // If sleep data exists for today, disable the component
-        if (response.data && response.data.sleep) {
-          setIsDataSentToday(true);
-          setHours(response.data.sleep); // Update hours to match server data
+        
+        // First get user data
+        const userResponse = await apiClient.get('/user/me');
+        console.log('User data:', userResponse.data);
+        
+        // Also try to get AI-based recommendations
+        try {
+          await apiClient.get('/user/ai-stats');
+          // We're not using the response yet, but we might need it in the future
+        } catch (aiError) {
+          console.error('Error fetching AI recommendations:', aiError);
+        }
+        
+        // Then check weekly statistics
+        const statsResponse = await apiClient.post('/user/weekly-statistic');
+        
+        // If sleep data exists for today, update the component
+        if (statsResponse.data && statsResponse.data.sleep) {
+          setHours(statsResponse.data.sleep); // Update hours to match server data
+          
+          // Save to local storage
+          localStorage.setItem(SLEEP_STORAGE_KEY, statsResponse.data.sleep.toString());
+          localStorage.setItem(SLEEP_DATE_KEY, new Date().toISOString().split('T')[0]);
         }
       } catch (error) {
-        console.error('Error checking sleep data status:', error);
+        console.error('Error fetching user data or sleep status:', error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkDataStatus();
+    // First try to load from local storage, if not successful, fetch from API
+    const dataLoaded = loadFromLocalStorage();
+    if (!dataLoaded) {
+      fetchUserData();
+    }
   }, []);
 
   const moonCount = 8;
@@ -49,12 +104,22 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
     try {
       setIsLoading(true);
       await apiClient.post('/user/weekly-statistic', { sleep: hours });
+      console.log(`Updated sleep statistics to ${hours} hours`);
       setIsSaved(true);
-      setIsDataSentToday(true); // Mark that data has been sent today
-      // Keep the saved state visible
+      
+      // Save to local storage
+      localStorage.setItem(SLEEP_STORAGE_KEY, hours.toString());
+      localStorage.setItem(SLEEP_DATE_KEY, new Date().toISOString().split('T')[0]);
+      
+      // Keep the saved state visible for a moment
       setTimeout(() => {
         setIsSaved(false);
       }, 3000);
+      
+      // Call the refetch callback if provided
+      if (onUpdate) {
+        onUpdate();
+      }
     } catch (error) {
       console.error('Error saving sleep data:', error);
       setIsSaved(false);
@@ -68,18 +133,13 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
 
   // Setup debounce effect
   useEffect(() => {
-    // Don't set up debounce if data was already sent today
-    if (isDataSentToday) {
-      return;
-    }
-    
     // Clear any existing timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     // Only set up debounce if hours have changed from last sent value
-    if (hours !== lastSentValueRef.current) {
+    if (hours !== lastSentValueRef.current && hours > 0) {
       setIsSaved(false);
       debounceTimerRef.current = setTimeout(() => {
         sendSleepData();
@@ -93,18 +153,36 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [hours, isDataSentToday]);
+  }, [hours, onUpdate]);
 
   const addHour = () => {
-    setHours((prev) => Math.min(prev + 1, goalHours));
+    // Ensure values are numbers
+    const currentHours = isNaN(hours) ? 0 : Number(hours);
+    const targetGoal = isNaN(goalHours) ? 8 : Number(goalHours);
+    
+    // Update local state
+    const newHours = Math.min(currentHours + 1, targetGoal);
+    console.log('Adding hour:', { currentHours, newHours });
+    
+    setHours(newHours);
+    
+    // Save to local storage immediately for a responsive feel
+    localStorage.setItem(SLEEP_STORAGE_KEY, newHours.toString());
+    localStorage.setItem(SLEEP_DATE_KEY, new Date().toISOString().split('T')[0]);
   };
 
   const reset = () => {
     setHours(0);
+    
+    // Update local storage
+    localStorage.setItem(SLEEP_STORAGE_KEY, '0');
+    localStorage.setItem(SLEEP_DATE_KEY, new Date().toISOString().split('T')[0]);
+    
+    console.log('Sleep hours reset to 0');
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl px-6 py-8 w-72 transition-all duration-300 hover:shadow-2xl">
+    <div className="bg-white rounded-3xl shadow-xl px-6 py-8 w-full transition-all duration-300 hover:shadow-2xl">
       <h3 className="text-center text-lg font-semibold text-purple-600 mb-4">🌙 Трекер сна</h3>
 
       <div className="relative w-56 h-56 mx-auto">
@@ -175,9 +253,9 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {hours}
+            {isNaN(hours) ? '0' : hours}
           </motion.p>
-          <p className="text-gray-500 text-sm">/ {goalHours} ч</p>
+          <p className="text-gray-500 text-sm">/ {isNaN(goalHours) ? '8' : goalHours} ч</p>
         </div>
       </div>
 
@@ -185,18 +263,20 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
         <Button
           onClick={addHour}
           className="flex-1 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
-          disabled={hours >= goalHours || isLoading || isDataSentToday}
+          disabled={hours >= goalHours || isLoading}
         >
           {isLoading ? 'Сохранение...' : 
-           isDataSentToday ? 'Данные отправлены' : 
            isSaved ? '✓ Сохранено' : 
-           '+ Добавить 1ч'}
+           <>
+             <Plus className="h-4 w-4 mr-2" />
+             Добавить 1ч
+           </>}
         </Button>
         <Button
           variant="outline"
           onClick={reset}
           className="w-12 p-0 border-purple-200 text-purple-500 hover:bg-purple-50 transition-all duration-300"
-          disabled={hours === 0 || isLoading || isDataSentToday}
+          disabled={hours === 0 || isLoading}
         >
           <RotateCcw className="h-4 w-4" />
         </Button>

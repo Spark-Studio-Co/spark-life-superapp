@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/shared/ui/layout";
 
 import { useRef } from "react";
+import { apiClient } from "@/shared/api/apiClient";
 
 export default function SparkFace() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -74,27 +75,23 @@ export default function SparkFace() {
 
       console.log("Отправка изображения в Skiniver API...");
 
-      const response = await fetch(
-        "https://spark-life-backend-production.up.railway.app/api/skiniver/predict",
+      const response = await apiClient.post(
+        "skiniver/predict", formData,
         {
-          method: "POST",
-          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
         }
       );
 
       console.log("Статус ответа:", response.status);
+      console.log("Данные от Skiniver:", response.data);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Ошибка API:", errorText);
-        throw new Error(`API request failed: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Данные от Skiniver:', data);
+      // Сохраняем результат анализа
+      const data = response.data;
 
       localStorage.removeItem('skiniver_error');
-      localStorage.setItem('skiniver_result', JSON.stringify(data));
+      localStorage.setItem('skiniver_result', JSON.stringify(data.result));
 
       setIsProcessing(false);
       navigate('/spark-face-result');

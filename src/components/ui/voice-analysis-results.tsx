@@ -319,9 +319,9 @@ export function VoiceAnalysisResults() {
             >
               <Button
                 className="flex-1"
-                onClick={() => navigate("/voice-analysis")}
+              // onClick={() => navigate("/voice-analysis")}
               >
-                Пройти снова
+                Записаться на прием
               </Button>
             </motion.div>
           </motion.div>

@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send } from "lucide-react";
+import { ArrowLeft, Link, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { MessageBubble } from "@/entities/ai-assistant/ui/message-bubble";
 import { QuickPrompt } from "@/entities/ai-assistant/ui/quick-prompt";
 import { useAiAssistant } from "@/entities/ai-assistant/api/use-ai-assistant";
 import ava from "@/assets/avatar.png";
+
 
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
@@ -61,7 +62,6 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-4 text-white flex items-center gap-3 shadow-md">
         <Avatar className="h-10 w-10 border-2 border-white/30 shadow-inner">
           <img src={ava} alt="AI Assistant" className="object-cover" />

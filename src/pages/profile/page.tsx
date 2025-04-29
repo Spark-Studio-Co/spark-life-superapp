@@ -54,11 +54,6 @@ export const ProfilePage = () => {
     )}`.toUpperCase();
   };
 
-  // Форматируем список заболеваний
-  const formatDiseases = () => {
-    if (!user?.diseases || user.diseases.length === 0) return "Не указано";
-    return user.diseases.join(", ");
-  };
 
   // Обработчик выхода из системы
   const handleLogout = () => {
@@ -186,11 +181,22 @@ export const ProfilePage = () => {
                           </span>
                         </div>
                         <Separator />
-                        <div className="flex justify-between py-2">
-                          <span className="text-gray-500">Заболевания</span>
-                          <span className="font-medium">
-                            {formatDiseases()}
-                          </span>
+                        <div className="py-2">
+                          <span className="block text-gray-500 mb-1">Заболевания:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {user?.diseases && user.diseases.length > 0 ? (
+                              user.diseases.map((disease, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
+                                >
+                                  {disease}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-500 text-sm">Не указано</span>
+                            )}
+                          </div>
                         </div>
                       </>
                     )}

@@ -7,14 +7,14 @@ interface AuthState {
   refreshToken: string | null;
   requestId: string | null;
   role: string | null;
-  userId: string | null;
+  userId: number | null;
   saveToken: (token: string) => void;
   saveRefreshToken: (token: string) => void;
   removeToken: () => void;
   saveRequestId: (requestId: string) => void;
   removeRequestId: () => void;
   loadToken: () => Promise<string | null>;
-  saveUserId: (userId: string) => void;
+  saveUserId: (userId: number) => void;
   removeUserId: () => void;
   saveRole: (role: string) => void;
   removeRole: () => void;
@@ -48,7 +48,7 @@ const useAuthStore = create<AuthState>()(
 
       loadToken: async () => get().token,
 
-      saveUserId: (userId: string) => set({ userId }),
+      saveUserId: (userId: number) => set({ userId }),
       removeUserId: () => set({ userId: null }),
 
       saveRole: (role: string) => set({ role }),

@@ -11,12 +11,6 @@ import { apiClient } from "@/shared/api/apiClient";
 import { userService } from "@/entities/user/api/user.api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface SleepData {
   day: string;
@@ -54,6 +48,7 @@ export function SleepWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [todaySleep, setTodaySleep] = useState<number>(0);
 
   // Function to parse sleep goal from string like "7-8" to a number
   const parseSleepGoal = (goalString: string): number => {
@@ -101,6 +96,19 @@ export function SleepWidget() {
         // Ensure the weekly_sleep data matches our expected type
         const typedWeeklySleepData = userData.weekly_sleep as WeeklySleepData[];
         setWeeklySleepData(typedWeeklySleepData);
+
+        // Set today's sleep value if available
+        const today = new Date().toISOString().split('T')[0];
+        const todayData = userData.weekly_sleep.find((item: WeeklySleepData) => {
+          if (!item.date) return false;
+          const dateParts = item.date.split(".");
+          const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+          return formattedDate.includes(today);
+        });
+        
+        if (todayData && todayData.sleep) {
+          setTodaySleep(todayData.sleep);
+        }
 
         // Convert API data to match our history format
         const apiHistory = userData.weekly_sleep.map(
@@ -182,27 +190,29 @@ export function SleepWidget() {
         </motion.div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex justify-center">
-          <SleepCircleIndicator initialHours={0} goalHours={sleepGoal} />
-        </div>
-        <Card className="border-none rounded-2xl overflow-hidden shadow-[0px_8px_30px_rgba(124,58,237,0.08)] hover:shadow-[0px_12px_36px_rgba(124,58,237,0.12)] transition-all duration-300">
-          <CardHeader className="">
+        <SleepCircleIndicator 
+          initialHours={todaySleep} 
+          goalHours={sleepGoal} 
+          onUpdate={handleRefresh}
+        />
+        <Card className="border-none rounded-2xl shadow-[0px_8px_30px_rgba(124,58,237,0.08)] overflow-hidden">
+          <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Moon className="h-5 w-5 text-purple-600" />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 font-semibold">
-                Статистика сна
+              <span className="text-purple-700">
+                Статистика
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pb-5">
+          <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100 shadow-sm">
                 {isLoading ? (
                   <Skeleton className="h-12 w-full" />
                 ) : (
                   <>
-                    <p className="text-sm text-purple-600/70 mb-1 flex items-center gap-1">
-                      <Award className="h-3.5 w-3.5" />
+                    <p className="text-sm text-purple-600/80 mb-1 flex items-center gap-1.5">
+                      <Award className="h-4 w-4" />
                       Среднее
                     </p>
                     <p className="text-2xl font-bold text-purple-700">
@@ -211,13 +221,13 @@ export function SleepWidget() {
                   </>
                 )}
               </div>
-              <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 shadow-sm">
                 {isLoading ? (
                   <Skeleton className="h-12 w-full" />
                 ) : (
                   <>
-                    <p className="text-sm text-indigo-600/70 mb-1 flex items-center gap-1">
-                      <Moon className="h-3.5 w-3.5" />
+                    <p className="text-sm text-indigo-600/80 mb-1 flex items-center gap-1.5">
+                      <Moon className="h-4 w-4" />
                       Цель
                     </p>
                     <p className="text-2xl font-bold text-indigo-700">
@@ -233,9 +243,9 @@ export function SleepWidget() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100"
+                className="mt-4 p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-100 shadow-sm"
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4 text-purple-600" />
                     <h3 className="text-sm font-medium text-purple-700">
@@ -251,12 +261,12 @@ export function SleepWidget() {
                         initial={{ opacity: 0, x: -5 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="flex justify-between items-center py-1.5 border-b border-purple-100 last:border-0"
+                        className="flex justify-between items-center py-2 px-2 border-b border-purple-100 last:border-0 hover:bg-purple-100/50 rounded-md transition-colors"
                       >
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-gray-600 font-medium">
                           {item.date}
                         </span>
-                        <span className="text-sm font-medium text-purple-700">
+                        <span className="text-sm font-medium text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
                           {item.sleep || "-"}ч
                         </span>
                       </motion.div>
@@ -266,108 +276,7 @@ export function SleepWidget() {
               </motion.div>
             )}
 
-            <div className="mt-6">
-              <TooltipProvider>
-                <div className="flex items-end h-[120px] gap-2 relative">
-                  {isLoading
-                    ? Array(7)
-                        .fill(0)
-                        .map((_, i) => (
-                          <div
-                            key={i}
-                            className="flex-1 flex flex-col items-center"
-                          >
-                            <Skeleton className="w-full h-[80px] mb-1" />
-                            <Skeleton className="w-6 h-4" />
-                          </div>
-                        ))
-                    : sleepData.map((day, index) => {
-                        const percentage = (day.hours / 10) * 100;
-                        const quality =
-                          day.hours >= sleepGoal
-                            ? "high"
-                            : day.hours >= sleepGoal * 0.9
-                            ? "medium"
-                            : "low";
-                        const barColor = getQualityColor(day.hours);
 
-                        return (
-                          <div
-                            key={index}
-                            className="flex-1 flex flex-col items-center"
-                          >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <motion.div
-                                  className="w-full relative h-[100px] flex items-end cursor-pointer"
-                                  whileHover={{ scale: 1.05 }}
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 300,
-                                  }}
-                                >
-                                  <div className="absolute bottom-0 left-0 right-0 rounded-full h-full"></div>
-                                  <motion.div
-                                    className={`absolute bottom-0 left-0 right-0 ${barColor} rounded-t-full shadow-lg`}
-                                    initial={{ height: 0 }}
-                                    animate={{
-                                      height: `${Math.min(percentage, 100)}%`,
-                                    }}
-                                    transition={{
-                                      duration: 1,
-                                      delay: index * 0.1,
-                                    }}
-                                  >
-                                    {/* Shine effect */}
-                                    <div className="absolute top-0 left-0 right-0 h-1/4 bg-white/20 rounded-t-full"></div>
-                                  </motion.div>
-
-                                  {/* Achievement indicator */}
-                                  {day.hours >= sleepGoal && (
-                                    <motion.div
-                                      className="absolute -top-2 -right-2 bg-indigo-400 rounded-full p-1 shadow-md"
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{
-                                        delay: index * 0.1 + 0.5,
-                                        type: "spring",
-                                      }}
-                                    >
-                                      <Award className="h-3 w-3 text-white" />
-                                    </motion.div>
-                                  )}
-                                </motion.div>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                className="bg-purple-800 text-white border-purple-900 shadow-xl"
-                              >
-                                <div className="text-center p-1">
-                                  <p className="font-medium">
-                                    {day.hours.toFixed(1)}ч
-                                  </p>
-                                  <p className="text-xs text-purple-200">
-                                    {((day.hours / sleepGoal) * 100).toFixed(0)}
-                                    % от цели
-                                  </p>
-                                  {day.hours >= sleepGoal && (
-                                    <p className="text-xs text-yellow-300 mt-1 flex items-center justify-center gap-1">
-                                      <Award className="h-3 w-3" /> Цель
-                                      достигнута!
-                                    </p>
-                                  )}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                            <span className="text-xs mt-2 font-medium text-gray-600">
-                              {day.day}
-                            </span>
-                          </div>
-                        );
-                      })}
-                </div>
-              </TooltipProvider>
-            </div>
           </CardContent>
         </Card>
       </div>
