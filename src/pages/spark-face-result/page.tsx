@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertCircle, ArrowLeft, Sparkles, Shield, ExternalLink } from "lucide-react"
+import { AlertCircle, ArrowLeft, Sparkles, Shield } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -239,7 +239,7 @@ export default function ResultsPage() {
                                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Button
                                         className="bg-primary flex w-full hover:bg-primary/90 text-primary-foreground px-6"
-                                        onClick={() => alert("Запись к врачу")}
+                                        onClick={() => navigate("/recommended-clinics")}
                                     >
                                         Записаться на прием
                                     </Button>

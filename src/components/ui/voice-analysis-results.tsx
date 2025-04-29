@@ -319,7 +319,7 @@ export function VoiceAnalysisResults() {
             >
               <Button
                 className="flex-1"
-              // onClick={() => navigate("/voice-analysis")}
+                onClick={() => navigate("/recommended-clinics")}
               >
                 Записаться на прием
               </Button>
