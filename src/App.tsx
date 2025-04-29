@@ -82,8 +82,10 @@ function App() {
           }
         />
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
-        <Route path="/voice-analysis-results" element={<VoiceAnalysisResultsPage />} />
-
+        <Route
+          path="/voice-analysis-results"
+          element={<VoiceAnalysisResultsPage />}
+        />
         <Route
           path="/"
           element={
@@ -245,7 +247,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Redirect for non-existent routes */}
+
+        <Route
+          path="/admin/appointments"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="*"
           element={<Navigate to={token ? "/" : "/login"} replace />}
