@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Droplet, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,21 +8,52 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { GoalReachedCelebration } from "./goal-reached-button";
 
+import { apiClient } from "@/shared/api/apiClient";
+
 interface HydrationBottleProps {
-  goal?: number; // Goal in ml
+  goal?: any; // Goal in ml
   initialValue?: number; // Initial value in ml
   incrementAmount?: number; // Amount to add per click in ml
+  onUpdate?: () => void; // Callback to refetch data after update
 }
 
 export const HydrationBottle = ({
   goal = 2500, // Default goal: 2.5L
   initialValue = 0,
   incrementAmount = 250, // Default increment: 250ml
+  onUpdate,
 }: HydrationBottleProps) => {
   const [hydration, setHydration] = useState(initialValue);
   const [showSplash, setShowSplash] = useState(false);
   const [isGoalReached, setIsGoalReached] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isDataSentToday, setIsDataSentToday] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Check if data was already sent today when component mounts
+  useEffect(() => {
+    const checkDataStatus = async () => {
+      try {
+        setIsLoading(true);
+        const response = await apiClient.get('/user/weekly-statistic');
+        // If water data exists for today, disable the component
+        if (response.data && response.data.water) {
+          setIsDataSentToday(true);
+          // Convert liters back to ml for display
+          const waterInMl = response.data.water * 1000;
+          setHydration(waterInMl); // Update hydration to match server data
+        }
+      } catch (error) {
+        console.error('Error checking hydration data status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkDataStatus();
+  }, []);
 
   // Calculate fill percentage (max 100%)
   const fillPercentage = Math.min((hydration / goal) * 100, 100);
@@ -37,10 +68,73 @@ export const HydrationBottle = ({
     }
   }, [hydration, goal, isGoalReached]);
 
+  // Function to send hydration data to API
+  const sendHydrationData = async () => {
+    try {
+      setIsLoading(true);
+      // Convert to liters for the API
+      const totalWaterAmount = hydration / 1000;
+      await apiClient.post('/user/weekly-statistic', { water: totalWaterAmount });
+      console.log(`Updated water statistics to ${totalWaterAmount}L`);
+      setIsSaved(true);
+      setIsDataSentToday(true); // Mark that data has been sent today
+      
+      // Keep the saved state visible for a moment
+      setTimeout(() => {
+        setIsSaved(false);
+      }, 3000);
+      
+      // Call the refetch callback if provided
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Failed to update water statistics:', error);
+      setIsSaved(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Track last sent value to avoid duplicate requests
+  const lastSentValueRef = useRef(initialValue);
+
+  // Setup debounce effect
+  useEffect(() => {
+    // Don't set up debounce if data was already sent today
+    if (isDataSentToday) {
+      return;
+    }
+    
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Only set up debounce if hydration has changed from last sent value
+    if (hydration !== lastSentValueRef.current && hydration > 0) {
+      setIsSaved(false);
+      debounceTimerRef.current = setTimeout(() => {
+        sendHydrationData();
+        lastSentValueRef.current = hydration; // Update last sent value
+      }, 5000); // 5 seconds debounce
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [hydration, onUpdate, isDataSentToday]);
+
   // Add water function
   const addWater = () => {
     setShowSplash(true);
-    setHydration((prev) => Math.min(prev + incrementAmount, goal));
+
+    // Update local state
+    const newHydration = Math.min(hydration + incrementAmount, Number(goal));
+    setHydration(newHydration);
 
     // Hide splash after animation
     setTimeout(() => setShowSplash(false), 1000);
@@ -67,13 +161,13 @@ export const HydrationBottle = ({
               {(hydration / 1000).toFixed(1)}
             </div>
             <div className="text-lg text-gray-500 ml-1">
-              / {(goal / 1000).toFixed(1)}л
+              / {goal / 1000} л
             </div>
           </div>
 
-          <div className="relative w-full h-64 mb-6">
+          <div className="relative w-full h-80 mb-8">
             <svg
-              viewBox="0 0 100 160"
+              viewBox="0 0 100 180"
               className="w-full h-full"
               style={{ filter: "drop-shadow(0px 4px 8px rgba(0,0,0,0.1))" }}
             >
@@ -161,22 +255,33 @@ export const HydrationBottle = ({
           <div className="flex gap-3 w-full">
             <Button
               onClick={addWater}
-              disabled={hydration >= goal}
+              disabled={hydration >= goal || isLoading || isDataSentToday}
               className={cn(
                 "flex-1 gap-2",
-                hydration >= goal
+                hydration >= goal || isLoading || isDataSentToday
                   ? "bg-gray-300"
                   : "bg-blue-500 hover:bg-blue-600"
               )}
             >
-              <Plus className="h-4 w-4" />
-              Добавить {incrementAmount}мл
+              {isLoading ? (
+                'Сохранение...'
+              ) : isDataSentToday ? (
+                'Данные отправлены'
+              ) : isSaved ? (
+                '✓ Сохранено'
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Добавить {incrementAmount}мл
+                </>
+              )}
             </Button>
 
             <Button
               onClick={resetHydration}
               variant="outline"
               className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              disabled={isLoading || isDataSentToday}
             >
               <RotateCcw className="h-4 w-4" />
             </Button>

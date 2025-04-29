@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
+import { apiClient } from "@/shared/api/apiClient";
 
 interface Props {
   initialHours: number;
@@ -13,10 +14,86 @@ interface Props {
 
 export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
   const [hours, setHours] = useState(initialHours);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isDataSentToday, setIsDataSentToday] = useState(false);
   const percentage = Math.min((hours / goalHours) * 100, 100);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Check if data was already sent today when component mounts
+  useEffect(() => {
+    const checkDataStatus = async () => {
+      try {
+        setIsLoading(true);
+        const response = await apiClient.get('/user/weekly-statistic');
+        // If sleep data exists for today, disable the component
+        if (response.data && response.data.sleep) {
+          setIsDataSentToday(true);
+          setHours(response.data.sleep); // Update hours to match server data
+        }
+      } catch (error) {
+        console.error('Error checking sleep data status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkDataStatus();
+  }, []);
 
   const moonCount = 8;
   const angleStep = 360 / moonCount;
+
+  // Function to send data to API
+  const sendSleepData = async () => {
+    try {
+      setIsLoading(true);
+      await apiClient.post('/user/weekly-statistic', { sleep: hours });
+      setIsSaved(true);
+      setIsDataSentToday(true); // Mark that data has been sent today
+      // Keep the saved state visible
+      setTimeout(() => {
+        setIsSaved(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error saving sleep data:', error);
+      setIsSaved(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Track last sent value to avoid duplicate requests
+  const lastSentValueRef = useRef(initialHours);
+
+  // Setup debounce effect
+  useEffect(() => {
+    // Don't set up debounce if data was already sent today
+    if (isDataSentToday) {
+      return;
+    }
+    
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Only set up debounce if hours have changed from last sent value
+    if (hours !== lastSentValueRef.current) {
+      setIsSaved(false);
+      debounceTimerRef.current = setTimeout(() => {
+        sendSleepData();
+        lastSentValueRef.current = hours; // Update last sent value
+      }, 5000); // 5 seconds debounce
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [hours, isDataSentToday]);
 
   const addHour = () => {
     setHours((prev) => Math.min(prev + 1, goalHours));
@@ -91,7 +168,7 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
 
         {/* Часы */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <motion.p 
+          <motion.p
             className="text-4xl font-bold text-gray-800"
             key={hours} // Для анимации при изменении
             initial={{ scale: 0.8, opacity: 0.5 }}
@@ -104,20 +181,22 @@ export function SleepCircleIndicator({ initialHours, goalHours }: Props) {
         </div>
       </div>
 
-      {/* Кнопки */}
       <div className="flex gap-3 mt-6">
-        <Button 
-          onClick={addHour} 
+        <Button
+          onClick={addHour}
           className="flex-1 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
-          disabled={hours >= goalHours}
+          disabled={hours >= goalHours || isLoading || isDataSentToday}
         >
-          + Добавить 1ч
+          {isLoading ? 'Сохранение...' : 
+           isDataSentToday ? 'Данные отправлены' : 
+           isSaved ? '✓ Сохранено' : 
+           '+ Добавить 1ч'}
         </Button>
         <Button
           variant="outline"
           onClick={reset}
           className="w-12 p-0 border-purple-200 text-purple-500 hover:bg-purple-50 transition-all duration-300"
-          disabled={hours === 0}
+          disabled={hours === 0 || isLoading || isDataSentToday}
         >
           <RotateCcw className="h-4 w-4" />
         </Button>

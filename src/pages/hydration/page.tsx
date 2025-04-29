@@ -1,12 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, Droplet, Plus } from "lucide-react";
+import { ArrowLeft, Droplet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MainLayout } from "@/shared/ui/layout";
 import { HydrationWidget } from "@/widgets/hydration/hydration";
+import { useEffect, useState } from "react";
+import { apiClient } from "@/shared/api/apiClient";
 
 export const HydrationPage = () => {
   const hydrationTips = [
@@ -16,6 +18,22 @@ export const HydrationPage = () => {
     "Установите напоминания о питье воды",
     "Добавляйте в воду лимон или огурец для вкуса",
   ];
+
+  const [hydraGoal, setHydraGoal] = useState()
+  const useGetHydraGoal = async () => {
+    try {
+      const response = await apiClient.get('/user/ai-stats');
+      setHydraGoal(response?.data?.daily_water)
+      console.log(response.data)
+      return response.data
+    } catch (error: any) {
+      console.log(error?.response?.data)
+    }
+  }
+
+  useEffect(() => {
+    useGetHydraGoal()
+  }, [])
 
   return (
     <MainLayout>
@@ -45,7 +63,7 @@ export const HydrationPage = () => {
       </div>
 
       <div className="px-6 -mt-12 space-y-8 pb-8">
-        <HydrationWidget goal={2500} initialValue={500} />
+        <HydrationWidget goal={Number(hydraGoal) * 1000} initialValue={500} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -73,23 +91,6 @@ export const HydrationPage = () => {
               ))}
             </CardContent>
           </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="flex justify-center"
-        >
-          <Button
-            asChild
-            className="w-full max-w-xs py-6 rounded-xl bg-blue-500 hover:bg-blue-600"
-          >
-            <Link to="/hydration/settings">
-              <Plus className="h-5 w-5 mr-2" />
-              Настроить цель гидратации
-            </Link>
-          </Button>
         </motion.div>
       </div>
     </MainLayout>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, Moon, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Moon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,56 +46,6 @@ export function SleepPage() {
 
       <div className="px-6 -mt-12 space-y-8 pb-8">
         <SleepWidget />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-indigo-600" />
-            Расписание сна
-          </h2>
-          <Card className="border-none rounded-2xl shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500">Отбой</p>
-                  <p className="text-lg font-medium text-gray-800">23:00</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-indigo-600 hover:bg-indigo-50"
-                >
-                  Изменить
-                </Button>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500">Подъем</p>
-                  <p className="text-lg font-medium text-gray-800">07:00</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-indigo-600 hover:bg-indigo-50"
-                >
-                  Изменить
-                </Button>
-              </div>
-
-              <div className="pt-2 border-t border-gray-100">
-                <p className="text-sm text-gray-500">
-                  Рекомендуемая продолжительность
-                </p>
-                <p className="text-lg font-medium text-gray-800">8 часов</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -123,23 +73,6 @@ export function SleepPage() {
               ))}
             </CardContent>
           </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="flex justify-center"
-        >
-          <Button
-            asChild
-            className="w-full max-w-xs py-6 rounded-xl bg-indigo-500 hover:bg-indigo-600"
-          >
-            <Link to="/sleep/journal">
-              <Calendar className="h-5 w-5 mr-2" />
-              Открыть журнал сна
-            </Link>
-          </Button>
         </motion.div>
       </div>
     </MainLayout>
