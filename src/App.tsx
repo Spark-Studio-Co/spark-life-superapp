@@ -26,6 +26,7 @@ import ChatPage from "./pages/ai-messenger/page";
 import { DocumentsPage } from "./pages/documents/page";
 import { SettingsPage } from "./pages/settings/page";
 import VoiceAnalysisResultsPage from "./pages/voice-analysis-results/page";
+import SleepStatistics from "./pages/sleep/statistics";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -80,7 +81,6 @@ function App() {
             </AuthRoute>
           }
         />
-
         {/* Public routes - accessible to everyone */}
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
         <Route path="/voice-analysis-results" element={<VoiceAnalysisResultsPage />} />
@@ -179,6 +179,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SleepPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sleep-statistics"
+          element={
+            <ProtectedRoute>
+              <SleepStatistics />
             </ProtectedRoute>
           }
         />
