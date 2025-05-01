@@ -1,4 +1,4 @@
-// @ts-nocheck
+//@ts-nocheck
 
 "use client";
 
@@ -11,7 +11,7 @@ import {
   Moon,
   Bell,
   RefreshCw,
-  File
+  File,
 } from "lucide-react";
 
 import type { QuickAction } from "@/entities/quick-actions/model/types";
@@ -36,7 +36,6 @@ export const DashboardPage = () => {
     notifications,
     isLoading: isNotificationsLoading,
     error: notificationsError,
-    reconnect,
     deleteNotification,
   } = useNotificationSocket();
 
@@ -50,8 +49,8 @@ export const DashboardPage = () => {
       description: notification.isCompleted
         ? "Выполнено"
         : isAlert
-          ? `Вчера вы пропустили приём ${notification.title}`
-          : `Следующий приём через ${notification.time}`,
+        ? `Вчера вы пропустили приём ${notification.title}`
+        : `Следующий приём через ${notification.time}`,
       time: notification.time,
       isAlert,
       isCompleted: notification.isCompleted,

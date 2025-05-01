@@ -33,7 +33,6 @@ export function RemindersPage() {
 
   const {
     notifications,
-    isConnected,
     isLoading,
     error,
     reconnect,
@@ -232,19 +231,6 @@ export function RemindersPage() {
                 <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
                   <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
                   <p className="text-gray-500">Загрузка напоминаний...</p>
-                </div>
-              ) : !isConnected ? (
-                <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
-                  <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
-                  <p className="text-gray-500">Подключение к серверу...</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={handleRetry}
-                  >
-                    Повторить
-                  </Button>
                 </div>
               ) : error ? (
                 <div className="p-8 text-center">
