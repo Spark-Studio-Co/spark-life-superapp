@@ -319,7 +319,7 @@ export function VoiceAnalysisResults() {
             >
               <Button
                 className="flex-1"
-                onClick={() => navigate("/recommended-clinics")}
+                onClick={() => navigate(getClinicUrlByAnalysisType("sparkvoice"))}
               >
                 Записаться на прием
               </Button>

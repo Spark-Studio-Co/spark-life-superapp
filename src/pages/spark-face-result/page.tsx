@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { MainLayout } from "@/shared/ui/layout"
+import { getClinicUrlByAnalysisType } from "@/entities/recommendet-clinics/use-recommended-clinics"
 
 interface SkinResult {
     class: string;
@@ -241,7 +242,7 @@ export default function ResultsPage() {
                                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Button
                                         className="bg-primary flex w-full hover:bg-primary/90 text-primary-foreground px-6"
-                                        onClick={() => navigate("/recommended-clinics")}
+                                        onClick={() => navigate(getClinicUrlByAnalysisType("face"))}
                                     >
                                         Записаться на прием
                                     </Button>

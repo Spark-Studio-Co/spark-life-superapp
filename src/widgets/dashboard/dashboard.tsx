@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { useNotificationSocket } from "@/entities/notification/hooks/use-notification";
 import { RemindersWidget } from "../reminders/reminders";
 
+import ToothIcon from "@/pages/modules/tooth-icon";
+
 export const DashboardPage = () => {
   // Получаем данные пользователя
   const { user, isLoading: isUserLoading, isError: isUserError } = useUser();
@@ -47,8 +49,8 @@ export const DashboardPage = () => {
       description: notification.isCompleted
         ? "Выполнено"
         : isAlert
-        ? `Вчера вы пропустили приём ${notification.title}`
-        : `Следующий приём через ${notification.time}`,
+          ? `Вчера вы пропустили приём ${notification.title}`
+          : `Следующий приём через ${notification.time}`,
       time: notification.time,
       isAlert,
       isCompleted: notification.isCompleted,
@@ -94,11 +96,11 @@ export const DashboardPage = () => {
       to: "/sleep",
     },
     {
-      id: "sparkremind",
-      title: "Напоминания",
-      icon: Bell,
-      color: "bg-purple-500",
-      to: "/reminder",
+      id: "sparkteeth",
+      title: "Анализ полости рта",
+      icon: ToothIcon,
+      color: "bg-blue-500",
+      to: "/spark-teeth",
     },
   ];
 

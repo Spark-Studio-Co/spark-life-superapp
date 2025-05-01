@@ -7,10 +7,20 @@ import { useState } from "react";
 import { MainLayout } from "@/shared/ui/layout";
 import { ModuleCard } from "@/entities/modules/ui/module-card";
 
+import ToothIcon from "./tooth-icon";
+
 export const ModulesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const modules = [
+    {
+      id: "sparkteeth",
+      title: "SparkTeeth",
+      description: "Онлайн диагностика полости рта",
+      icon: ToothIcon,
+      color: "bg-blue-500",
+      to: "/spark-teeth",
+    },
     {
       id: "sparkface",
       title: "Анализ лица",
@@ -84,6 +94,7 @@ export const ModulesPage = () => {
               key={module.id}
               title={module.title}
               description={module.description}
+              //@ts-ignore
               icon={module.icon}
               color={module.color}
               to={module.to}

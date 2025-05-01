@@ -29,6 +29,8 @@ import VoiceAnalysisResultsPage from "./pages/voice-analysis-results/page";
 import SleepStatistics from "./pages/sleep/statistics";
 import RecommendedClinicsPage from "./pages/recommendations/page";
 import { AdminPanel } from "./pages/admin-panel/admin-panel";
+import SparkTeeth from "./pages/spark-teeth/page";
+import SparkTeethResult from "./pages/spark-teeth/result-page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -180,6 +182,22 @@ function App() {
           element={
             <ProtectedRoute>
               <HydrationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spark-teeth"
+          element={
+            <ProtectedRoute>
+              <SparkTeeth />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spark-teeth-result"
+          element={
+            <ProtectedRoute>
+              <SparkTeethResult />
             </ProtectedRoute>
           }
         />

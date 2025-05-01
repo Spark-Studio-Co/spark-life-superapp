@@ -117,8 +117,6 @@ export const MultiStepRegisterForm = () => {
         ? Step3Schema
         : Step4Schema,
     onSubmit: async (values) => {
-      // Медицинская справка теперь опциональна
-
       // Подготавливаем массив заболеваний
       // Убедимся, что diseases всегда массив строк
       let diseases: string[] = [];
@@ -133,11 +131,6 @@ export const MultiStepRegisterForm = () => {
         diseases.push(values.otherDisease);
       }
 
-      // Если массив пустой, добавим пустой массив
-      if (diseases.length === 0) {
-        diseases = [];
-      }
-
       // Формируем базовые данные для регистрации
       const baseData = {
         email: values.email,
@@ -149,13 +142,15 @@ export const MultiStepRegisterForm = () => {
         password: values.password,
       };
 
-      // Вызываем мутацию регистрации с данными из формы, только если файл был загружен
+      // Проверяем наличие медицинской справки
       if (values.medicalCertificate) {
         // Формируем данные для регистрации с файлом
         const registerData = {
           data: baseData,
           medDocFile: values.medicalCertificate,
         };
+        
+        // Вызываем мутацию регистрации с данными из формы
         register(registerData, {
           onSuccess: () => {
             setIsRegistrationComplete(true);
@@ -178,15 +173,43 @@ export const MultiStepRegisterForm = () => {
           },
         });
       } else {
-        // Если файл не был загружен, показываем предупреждение и переходим к завершению
+        // Если файл не был загружен, показываем предупреждение
         toast({
           title: "Внимание",
           description:
             "Вы не загрузили медицинскую справку. Вы сможете загрузить ее позже в личном кабинете.",
-          variant: "destructive",
+          variant: "warning",
         });
-        setIsRegistrationComplete(true);
-        setCurrentStep(5); // Переход к экрану завершения
+        
+        // Создаем пустой файл для API (или можно модифицировать API для поддержки null)
+        const emptyBlob = new Blob([""], { type: "application/octet-stream" });
+        const emptyFile = new File([emptyBlob], "empty.txt", { type: "application/octet-stream" });
+        
+        // Формируем данные для регистрации с пустым файлом
+        const registerData = {
+          data: baseData,
+          medDocFile: emptyFile,
+        };
+        
+        // Вызываем мутацию регистрации
+        register(registerData, {
+          onSuccess: () => {
+            setIsRegistrationComplete(true);
+            setCurrentStep(5); // Переход к экрану завершения
+          },
+          onError: (error: any) => {
+            console.error("Registration error:", error);
+            toast({
+              title: "Ошибка регистрации",
+              description:
+                error.response?.data?.message ||
+                (Array.isArray(error.response?.data?.message)
+                  ? error.response.data.message.join(", ")
+                  : "Произошла ошибка при регистрации"),
+              variant: "destructive",
+            });
+          },
+        });
       }
     },
   });
