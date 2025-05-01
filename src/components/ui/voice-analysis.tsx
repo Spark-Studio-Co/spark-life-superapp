@@ -241,8 +241,8 @@ export function VoiceAnalysis() {
 
   // Вычисляем цвет орба в зависимости от текущего шага
   const getOrbColor = () => {
-    // Синий -> Фиолетовый -> Зеленый
-    const colors = ["#3b82f6"];
+    // Используем розовый цвет для соответствия теме SparkVoice
+    const colors = ["#ec4899"];
     return colors[currentStep];
   };
 
@@ -308,7 +308,7 @@ export function VoiceAnalysis() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="bg-primary/20 rounded-full p-2"
+                    className="bg-rose-500/20 rounded-full p-2"
                   >
                     <Mic className="h-8 w-8 text-white" />
                   </motion.div>
@@ -336,9 +336,9 @@ export function VoiceAnalysis() {
                 <div
                   key={index}
                   className={`h-2 rounded-full flex-1 mx-1 ${index < currentStep
-                    ? "bg-primary"
+                    ? "bg-rose-500"
                     : index === currentStep
-                      ? "bg-primary/60"
+                      ? "bg-rose-400/60"
                       : "bg-muted"
                     }`}
                 />
@@ -362,7 +362,7 @@ export function VoiceAnalysis() {
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
-                    className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary mb-6"
+                    className="w-16 h-16 rounded-full border-4 border-pink-300/30 border-t-rose-500 mb-6"
                   />
                   <motion.div
                     animate={{
@@ -376,7 +376,7 @@ export function VoiceAnalysis() {
                     }}
                     className="absolute inset-0 flex items-center justify-center"
                   >
-                    <Mic className="h-6 w-6 text-primary" />
+                    <Mic className="h-6 w-6 text-rose-500" />
                   </motion.div>
                 </div>
 
@@ -384,7 +384,7 @@ export function VoiceAnalysis() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-center font-medium text-primary mb-2"
+                  className="text-center font-medium text-rose-500 mb-2"
                 >
                   Анализируем ваши ответы
                 </motion.p>
@@ -398,7 +398,7 @@ export function VoiceAnalysis() {
                     repeatType: "reverse",
                     ease: "easeInOut"
                   }}
-                  className="h-1 bg-gradient-to-r from-blue-500 to-primary rounded-full mt-2"
+                  className="h-1 bg-gradient-to-r from-rose-500 to-pink-400 rounded-full mt-2"
                 />
 
                 <motion.p

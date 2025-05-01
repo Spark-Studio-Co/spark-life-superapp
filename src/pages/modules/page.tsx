@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Bell, Droplets, Mic, Search, Moon } from "lucide-react";
+import { Camera, Bell, Droplets, Mic, Search, Moon, File } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { MainLayout } from "@/shared/ui/layout";
@@ -14,6 +14,14 @@ export const ModulesPage = () => {
 
   const modules = [
     {
+      id: "sparkdoctor",
+      title: "SparkDoc",
+      description: "Онлайн анализ документов",
+      icon: File,
+      color: "bg-green-500",
+      to: "/spark-doctor",
+    },
+    {
       id: "sparkteeth",
       title: "SparkTeeth",
       description: "Онлайн диагностика полости рта",
@@ -23,7 +31,7 @@ export const ModulesPage = () => {
     },
     {
       id: "sparkface",
-      title: "Анализ лица",
+      title: "SparkFace",
       description: "Диагностика кожных заболеваний по фото",
       icon: Camera,
       color: "bg-orange-500",
@@ -31,7 +39,7 @@ export const ModulesPage = () => {
     },
     {
       id: "sparkvoice",
-      title: "Анализ речи",
+      title: "SparkVoice",
       description: "Анализ речи на признаки депрессии",
       icon: Mic,
       color: "bg-rose-500",

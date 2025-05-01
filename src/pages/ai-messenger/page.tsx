@@ -7,6 +7,7 @@ import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Link, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import ava from "@/assets/avatar.png";
 // test
 
 export default function ChatPage() {
+  const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -66,6 +68,15 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-4 text-white flex items-center gap-3 shadow-md">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2 text-white hover:bg-white/20"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Назад</span>
+        </Button>
         <Avatar className="h-10 w-10 border-2 border-white/30 shadow-inner">
           <img src={ava} alt="AI Assistant" className="object-cover" />
         </Avatar>

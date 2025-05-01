@@ -19,7 +19,7 @@ export function SleepPage() {
 
   return (
     <MainLayout>
-      <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-6 pt-8 pb-16">
+      <div className="bg-gradient-to-r from-indigo-600 to-blue-400 px-6 pt-8 pb-16">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

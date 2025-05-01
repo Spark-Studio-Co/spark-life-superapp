@@ -37,7 +37,7 @@ export const HydrationPage = () => {
 
   return (
     <MainLayout>
-      <div className="bg-gradient-to-r from-blue-400 to-cyan-400 px-6 pt-8 pb-16">
+      <div className="bg-gradient-to-r from-cyan-500 to-teal-300 px-6 pt-8 pb-16">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

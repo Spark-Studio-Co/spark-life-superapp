@@ -11,6 +11,7 @@ import {
   Moon,
   Bell,
   RefreshCw,
+  File
 } from "lucide-react";
 
 import type { QuickAction } from "@/entities/quick-actions/model/types";
@@ -75,11 +76,18 @@ export const DashboardPage = () => {
       to: "/spark-voice",
     },
     {
-      id: "sparkwater",
-      title: "Гидратация",
-      icon: Droplets,
-      color: "bg-cyan-500",
-      to: "/hydration",
+      id: "sparkteeth",
+      title: "Анализ полости рта",
+      icon: ToothIcon,
+      color: "bg-blue-500",
+      to: "/spark-teeth",
+    },
+    {
+      id: "sparkdoctor",
+      title: "Анализ документов",
+      icon: File,
+      color: "bg-green-500",
+      to: "/spark-doctor",
     },
     {
       id: "sparkcare",
@@ -94,13 +102,6 @@ export const DashboardPage = () => {
       icon: Moon,
       color: "bg-[#38bdf8]",
       to: "/sleep",
-    },
-    {
-      id: "sparkteeth",
-      title: "Анализ полости рта",
-      icon: ToothIcon,
-      color: "bg-blue-500",
-      to: "/spark-teeth",
     },
   ];
 
@@ -187,14 +188,13 @@ export const DashboardPage = () => {
             </AlertDescription>
           </Alert>
         )} */}
-
+        <QuickActionsWidget actions={quickActions} />
         <RemindersWidget
           reminders={remindersFromNotifications}
           isLoading={isNotificationsLoading}
           onCompleteReminder={handleCompleteReminder}
           onDeleteReminder={handleDeleteReminder}
         />
-        <QuickActionsWidget actions={quickActions} />
         <AiRecommendationsWidget recommendations={aiRecommendations} />
       </div>
     </MainLayout>

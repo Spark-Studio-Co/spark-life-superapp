@@ -31,6 +31,8 @@ import RecommendedClinicsPage from "./pages/recommendations/page";
 import { AdminPanel } from "./pages/admin-panel/admin-panel";
 import SparkTeeth from "./pages/spark-teeth/page";
 import SparkTeethResult from "./pages/spark-teeth/result-page";
+import SparkDoc from "./pages/spark-doctor/page";
+import SparkDocResult from "./pages/spark-doc-result/page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -210,6 +212,14 @@ function App() {
           }
         />
         <Route
+          path="/spark-doctor"
+          element={
+            <ProtectedRoute>
+              <SparkDoc />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/sleep-statistics"
           element={
             <ProtectedRoute>
@@ -266,7 +276,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/spark-doctor-result"
+          element={
+            <ProtectedRoute>
+              <SparkDocResult />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin"
           element={
