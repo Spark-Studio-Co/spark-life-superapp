@@ -30,7 +30,7 @@ export default function ChatPage() {
   // Auto-scroll to bottom when new messages arrive and play audio for new AI messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    
+
     // Play audio when a new AI message arrives
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
@@ -39,19 +39,19 @@ export default function ChatPage() {
           try {
             // Clean the audio path - remove any newline characters and trim
             let cleanAudioPath = lastMessage.audioPath.replace(/\n/g, '').trim();
-            
+
             // If it's a relative path, add the base URL
             if (!cleanAudioPath.startsWith('http')) {
               const baseUrl = window.location.origin;
               cleanAudioPath = `${baseUrl}${cleanAudioPath}`;
             }
-            
+
             console.log('Playing audio from:', cleanAudioPath);
-            
+
             // Set the source and play
             audioRef.current.src = cleanAudioPath;
             audioRef.current.load();
-            
+
             // Play with a slight delay to ensure loading
             setTimeout(() => {
               const playPromise = audioRef.current?.play();
@@ -227,6 +227,7 @@ export default function ChatPage() {
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
             <Textarea
+              user-scalable='no'
               ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
