@@ -22,24 +22,86 @@ export default function SparkDoc() {
         }
     }, [selectedImage])
 
+    // Очистка ресурсов камеры при размонтировании компонента
+    useEffect(() => {
+        return () => {
+            // Остановка всех медиа-треков при размонтировании компонента
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+            }
+        };
+    }, []);
+
+    // Остановка камеры при переходе на другую страницу или закрытии приложения
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden' && videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+                setCameraActive(false);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
     const activateCamera = async () => {
         try {
+            // Остановка предыдущей сессии камеры, если она существует
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+                videoRef.current.srcObject = null; // Явно очищаем srcObject
+            }
+            
             setCameraActive(true)
             setCameraError(false)
 
-            // Use constraints that work better on mobile
+            // Оптимизированные настройки для WebView
             const constraints = {
                 video: {
-                    facingMode: "environment", // Use back camera for documents
+                    facingMode: "environment", // Используем заднюю камеру для документов
                     width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    height: { ideal: 720 },
+                    // Добавляем дополнительные настройки для мобильных устройств
+                    frameRate: { ideal: 30 },
+                    aspectRatio: { ideal: 4/3 }
                 }
             }
 
+            console.log('Запрашиваем доступ к камере с параметрами:', constraints);
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
+            console.log('Доступ к камере получен, треки:', stream.getTracks().length);
+            
             if (videoRef.current) {
-                videoRef.current.srcObject = stream
-                videoRef.current.play()
+                videoRef.current.srcObject = stream;
+                // Используем промис для воспроизведения
+                try {
+                    await videoRef.current.play();
+                    console.log('Видео запущено успешно');
+                } catch (playError) {
+                    console.error('Ошибка воспроизведения видео:', playError);
+                    // Повторная попытка запустить видео с задержкой
+                    setTimeout(() => {
+                        if (videoRef.current) {
+                            videoRef.current.play()
+                                .catch(err => console.error('Повторная ошибка воспроизведения:', err));
+                        }
+                    }, 500);
+                }
             }
         } catch (error) {
             console.error("Ошибка при доступе к камере:", error)
@@ -114,34 +176,67 @@ export default function SparkDoc() {
 
     const capturePhoto = () => {
         if (videoRef.current) {
-            const video = videoRef.current
-            const canvas = document.createElement("canvas")
+            try {
+                console.log('Запуск захвата фото');
+                const video = videoRef.current
+                const canvas = document.createElement("canvas")
 
-            // Ensure we get proper dimensions
-            const width = video.videoWidth || 640
-            const height = video.videoHeight || 480
+                // Ensure we get proper dimensions
+                const width = video.videoWidth || 640
+                const height = video.videoHeight || 480
+                console.log(`Размеры видео: ${width}x${height}`);
 
-            canvas.width = width
-            canvas.height = height
+                canvas.width = width
+                canvas.height = height
 
-            const ctx = canvas.getContext("2d")
-            if (ctx) {
-                // Draw the video frame to the canvas
-                ctx.drawImage(video, 0, 0, width, height)
+                const ctx = canvas.getContext("2d")
+                if (ctx) {
+                    // Draw the video frame to the canvas
+                    ctx.drawImage(video, 0, 0, width, height)
 
-                // Convert to image URL
-                const imageUrl = canvas.toDataURL("image/png")
-                setSelectedImage(imageUrl)
+                    // Convert to image URL
+                    const imageUrl = canvas.toDataURL("image/png")
+                    console.log('Изображение получено, длина:', imageUrl.length);
+                    setSelectedImage(imageUrl)
 
-                // Stop the camera stream
-                const stream = video.srcObject as MediaStream
-                if (stream) {
-                    const tracks = stream.getTracks()
-                    tracks.forEach(track => track.stop())
+                    // Stop the camera stream
+                    const stream = video.srcObject as MediaStream
+                    if (stream) {
+                        const tracks = stream.getTracks()
+                        console.log(`Остановка ${tracks.length} треков камеры`);
+                        tracks.forEach(track => {
+                            track.stop()
+                            console.log(`Трек ${track.kind} остановлен, активен: ${track.readyState}`);
+                        })
+                    }
+                    
+                    // Явно очищаем srcObject
+                    video.srcObject = null;
+                    
+                    // Добавляем небольшую задержку перед изменением состояния
+                    setTimeout(() => {
+                        setCameraActive(false)
+                        console.log('Камера деактивирована');
+                    }, 100);
+                }
+            } catch (error) {
+                console.error('Ошибка при захвате фото:', error);
+                setCameraActive(false);
+                
+                // Остановка камеры в случае ошибки
+                try {
+                    if (videoRef.current && videoRef.current.srcObject) {
+                        const stream = videoRef.current.srcObject as MediaStream;
+                        if (stream) {
+                            const tracks = stream.getTracks();
+                            tracks.forEach(track => track.stop());
+                        }
+                        videoRef.current.srcObject = null;
+                    }
+                } catch (e) {
+                    console.error('Ошибка при остановке камеры:', e);
                 }
             }
-
-            setCameraActive(false)
         }
     }
 
@@ -263,6 +358,13 @@ export default function SparkDoc() {
                                                         playsInline
                                                         autoPlay
                                                         muted
+                                                        onLoadedMetadata={() => {
+                                                            // Принудительно запустить видео после загрузки метаданных
+                                                            if (videoRef.current) {
+                                                                videoRef.current.play()
+                                                                    .catch(err => console.error('Ошибка воспроизведения видео:', err));
+                                                            }
+                                                        }}
                                                     />
                                                 </>
                                             )}

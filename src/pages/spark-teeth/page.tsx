@@ -23,24 +23,86 @@ export default function SparkTeeth() {
         }
     }, [selectedImage])
 
+    // Очистка ресурсов камеры при размонтировании компонента
+    useEffect(() => {
+        return () => {
+            // Остановка всех медиа-треков при размонтировании компонента
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+            }
+        };
+    }, []);
+
+    // Остановка камеры при переходе на другую страницу или закрытии приложения
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden' && videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+                setCameraActive(false);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
     const activateCamera = async () => {
         try {
+            // Остановка предыдущей сессии камеры, если она существует
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+                videoRef.current.srcObject = null; // Явно очищаем srcObject
+            }
+            
             setCameraActive(true)
             setCameraError(false)
 
-            // Use constraints that work better on mobile
+            // Оптимизированные настройки для WebView
             const constraints = {
                 video: {
-                    facingMode: "user", // Use front camera
+                    facingMode: "user", // Используем фронтальную камеру для зубов
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
-                },
+                    // Добавляем дополнительные настройки для мобильных устройств
+                    frameRate: { ideal: 30 },
+                    aspectRatio: { ideal: 4/3 }
+                }
             }
 
+            console.log('Запрашиваем доступ к камере с параметрами:', constraints);
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
+            console.log('Доступ к камере получен, треки:', stream.getTracks().length);
+            
             if (videoRef.current) {
-                videoRef.current.srcObject = stream
-                videoRef.current.play()
+                videoRef.current.srcObject = stream;
+                // Используем промис для воспроизведения
+                try {
+                    await videoRef.current.play();
+                    console.log('Видео запущено успешно');
+                } catch (playError) {
+                    console.error('Ошибка воспроизведения видео:', playError);
+                    // Повторная попытка запустить видео с задержкой
+                    setTimeout(() => {
+                        if (videoRef.current) {
+                            videoRef.current.play()
+                                .catch(err => console.error('Повторная ошибка воспроизведения:', err));
+                        }
+                    }, 500);
+                }
             }
         } catch (error) {
             console.error("Ошибка при доступе к камере:", error)
@@ -270,6 +332,13 @@ export default function SparkTeeth() {
                                                         autoPlay
                                                         muted
                                                         style={{ transform: "scaleX(-1)" }} /* Mirror the camera view */
+                                                        onLoadedMetadata={() => {
+                                                            // Принудительно запустить видео после загрузки метаданных
+                                                            if (videoRef.current) {
+                                                                videoRef.current.play()
+                                                                    .catch(err => console.error('Ошибка воспроизведения видео:', err));
+                                                            }
+                                                        }}
                                                     />
                                                 </>
                                             )}

@@ -24,11 +24,49 @@ export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const { messages, sendMessage, isTyping } = useAiAssistant();
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive and play audio for new AI messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    
+    // Play audio when a new AI message arrives
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'ai' && lastMessage.audioPath) {
+        if (audioRef.current) {
+          try {
+            // Clean the audio path - remove any newline characters and trim
+            let cleanAudioPath = lastMessage.audioPath.replace(/\n/g, '').trim();
+            
+            // If it's a relative path, add the base URL
+            if (!cleanAudioPath.startsWith('http')) {
+              const baseUrl = window.location.origin;
+              cleanAudioPath = `${baseUrl}${cleanAudioPath}`;
+            }
+            
+            console.log('Playing audio from:', cleanAudioPath);
+            
+            // Set the source and play
+            audioRef.current.src = cleanAudioPath;
+            audioRef.current.load();
+            
+            // Play with a slight delay to ensure loading
+            setTimeout(() => {
+              const playPromise = audioRef.current?.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                  console.error('Error playing audio:', error);
+                });
+              }
+            }, 100);
+          } catch (error) {
+            console.error('Error setting up audio playback:', error);
+          }
+        }
+      }
+    }
   }, [messages]);
 
   // Auto-resize textarea
@@ -67,6 +105,8 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
+      {/* Hidden audio element for playing AI responses */}
+      <audio ref={audioRef} className="hidden" />
       <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-4 text-white flex items-center gap-3 shadow-md">
         <Button
           variant="ghost"
