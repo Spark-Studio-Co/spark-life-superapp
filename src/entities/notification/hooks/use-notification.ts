@@ -21,9 +21,7 @@ interface UseNotificationSocketProps {
   apiUrl?: string;
 }
 
-export function useNotificationSocket({
-  apiUrl = "https://spark-life-backend-production.up.railway.app/api",
-}: UseNotificationSocketProps = {}) {
+export function useNotificationSocket({}: UseNotificationSocketProps = {}) {
   const { userId } = useAuthData();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
