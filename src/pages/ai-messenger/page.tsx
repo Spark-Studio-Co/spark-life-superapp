@@ -34,19 +34,21 @@ export default function ChatPage() {
     // Play audio when a new AI message arrives
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === 'ai' && lastMessage.audioPath) {
+      if (lastMessage.sender === "ai" && lastMessage.audioPath) {
         if (audioRef.current) {
           try {
             // Clean the audio path - remove any newline characters and trim
-            let cleanAudioPath = lastMessage.audioPath.replace(/\n/g, '').trim();
+            let cleanAudioPath = lastMessage.audioPath
+              .replace(/\n/g, "")
+              .trim();
 
             // If it's a relative path, add the base URL
-            if (!cleanAudioPath.startsWith('http')) {
+            if (!cleanAudioPath.startsWith("http")) {
               const baseUrl = window.location.origin;
               cleanAudioPath = `${baseUrl}${cleanAudioPath}`;
             }
 
-            console.log('Playing audio from:', cleanAudioPath);
+            console.log("Playing audio from:", cleanAudioPath);
 
             // Set the source and play
             audioRef.current.src = cleanAudioPath;
@@ -56,13 +58,13 @@ export default function ChatPage() {
             setTimeout(() => {
               const playPromise = audioRef.current?.play();
               if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                  console.error('Error playing audio:', error);
+                playPromise.catch((error) => {
+                  console.error("Error playing audio:", error);
                 });
               }
             }, 100);
           } catch (error) {
-            console.error('Error setting up audio playback:', error);
+            console.error("Error setting up audio playback:", error);
           }
         }
       }
@@ -227,13 +229,13 @@ export default function ChatPage() {
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
             <Textarea
-              user-scalable='no'
+              user-scalable="no"
               ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Напишите сообщение..."
-              className="resize-none pr-10 min-h-[40px] max-h-[120px] py-2 rounded-2xl border-gray-200 focus:border-indigo-300 focus:ring-indigo-300"
+              className="resize-none text-[16px] placeholder:text-[16px] pr-10 min-h-[40px] max-h-[120px] py-2 rounded-2xl border-gray-200 focus:border-indigo-300 focus:ring-indigo-300"
               rows={1}
             />
           </div>
