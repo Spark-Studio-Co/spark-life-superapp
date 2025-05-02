@@ -35,7 +35,7 @@ import SparkTeeth from "./pages/spark-teeth/page";
 import SparkTeethResult from "./pages/spark-teeth/result-page";
 import SparkDoc from "./pages/spark-doctor/page";
 import SparkDocResult from "./pages/spark-doc-result/page";
-import VideoChat from "./pages/video-chat/page";
+import VideoChat from "./pages/video-chat/[id]/page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -90,7 +90,7 @@ function App() {
           }
         />
         <Route path="/spark-voice" element={<VoiceAnalysisPage />} />
-        <Route path="/video-chat" element={<VideoChat />} />
+        <Route path="/video-chat/:id" element={<VideoChat />} />
         <Route
           path="/voice-analysis-results"
           element={<VoiceAnalysisResultsPage />}

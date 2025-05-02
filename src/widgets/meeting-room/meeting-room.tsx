@@ -1,7 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Mic,
   MicOff,
@@ -11,23 +10,18 @@ import {
   MessageSquare,
   Activity,
   ArrowLeft,
-  MoreVertical,
   Clipboard,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import ParticipantVideo from "@/entities/chat/ui/participant-video";
 import { MeetingProvider, useMeeting } from "@videosdk.live/react-sdk";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import ChatMessage from "@/entities/chat/ui/chat-message";
+import { Avatar } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@/entities/user/hooks/use-user";
+import ParticipantVideo from "../participant-view/participant-view";
 
 interface MeetingRoomProps {
   meetingId: string;
@@ -35,51 +29,29 @@ interface MeetingRoomProps {
   authToken: string;
 }
 
-// Mock messages for demonstration
-const mockMessages = [
-  {
-    id: "1",
-    sender: "Dr. Sarah Johnson",
-    content: "How are you feeling today?",
-    time: "10:01 AM",
-  },
-  {
-    id: "2",
-    sender: "John Smith",
-    content:
-      "Much better than yesterday, the new medication seems to be working.",
-    time: "10:02 AM",
-  },
-  {
-    id: "3",
-    sender: "Dr. Sarah Johnson",
-    content: "That's great to hear! Any side effects?",
-    time: "10:03 AM",
-  },
-  {
-    id: "4",
-    sender: "John Smith",
-    content:
-      "Just a bit of drowsiness in the morning, but it wears off quickly.",
-    time: "10:04 AM",
-  },
-];
-
 function MeetingView({ participantName }: { participantName: string }) {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<"call" | "chat" | "health">(
     "call"
   );
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isHealthOpen, setIsHealthOpen] = useState(false);
-  const [messages, setMessages] = useState(mockMessages);
-  const [newMessage, setNewMessage] = useState("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
+
   const [showControls, setShowControls] = useState(true);
 
-  const { participants, localParticipant, leave, toggleMic, toggleWebcam } =
-    useMeeting();
+  // Get user data from the hook
+  const { user, isLoading: isUserLoading, getInitials } = useUser();
 
+  // Get meeting methods and state
+  const meeting = useMeeting();
+  const {
+    participants,
+    localParticipant,
+    leave,
+    toggleMic,
+    enableWebcam,
+    disableWebcam,
+  } = meeting;
+
+  // Local participant state
   const [isMicOn, setIsMicOn] = useState(true);
   const [isWebcamOn, setIsWebcamOn] = useState(true);
 
@@ -99,27 +71,6 @@ function MeetingView({ participantName }: { participantName: string }) {
     }
   };
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newMessage.trim()) {
-      const newMsg = {
-        id: Date.now().toString(),
-        sender: participantName,
-        content: newMessage,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
-    }
-  };
-
   const handleLeaveMeeting = () => {
     leave();
     navigate("/");
@@ -131,11 +82,19 @@ function MeetingView({ participantName }: { participantName: string }) {
   };
 
   const handleToggleWebcam = () => {
-    toggleWebcam();
+    if (isWebcamOn) {
+      disableWebcam();
+    } else {
+      enableWebcam();
+    }
     setIsWebcamOn(!isWebcamOn);
   };
 
+  // Convert participants map to array
   const participantsArr = [...participants.values()];
+
+  // Determine if the user is a doctor based on their role
+  const isDoctor = user?.role === "doctor";
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -187,14 +146,40 @@ function MeetingView({ participantName }: { participantName: string }) {
                       </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-white">
-                    <MoreVertical className="h-6 w-6" />
-                  </Button>
+                  <div className="flex items-center">
+                    {isUserLoading ? (
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                    ) : (
+                      <div className="flex items-center">
+                        <Badge
+                          variant="outline"
+                          className={`mr-2 border-white/30 bg-black/30 text-white ${
+                            isDoctor ? "text-primary" : "text-white"
+                          }`}
+                        >
+                          {isDoctor ? (
+                            <>
+                              <Shield className="mr-1 h-3 w-3" />
+                              Doctor
+                            </>
+                          ) : (
+                            <>
+                              <Activity className="mr-1 h-3 w-3" />
+                              Patient
+                            </>
+                          )}
+                        </Badge>
+                        <Avatar className="h-10 w-10">
+                          <div className="flex h-full w-full items-center justify-center bg-primary/20 text-primary">
+                            {getInitials()}
+                          </div>
+                        </Avatar>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
-
-            {/* Video grid */}
             <div className="flex flex-1 flex-col bg-black">
               {participantsArr.length > 0 ? (
                 <div className="grid h-full grid-cols-1 gap-1 p-0">
@@ -231,6 +216,7 @@ function MeetingView({ participantName }: { participantName: string }) {
                       <MicOff className="h-6 w-6" />
                     )}
                   </Button>
+
                   <Button
                     onClick={handleToggleWebcam}
                     variant="ghost"
@@ -245,6 +231,7 @@ function MeetingView({ participantName }: { participantName: string }) {
                       <VideoOff className="h-6 w-6" />
                     )}
                   </Button>
+
                   <Button
                     onClick={handleLeaveMeeting}
                     variant="destructive"
@@ -266,64 +253,6 @@ function MeetingView({ participantName }: { participantName: string }) {
             )}
           </>
         )}
-
-        {/* Chat View */}
-        {activeView === "chat" && (
-          <div className="flex h-full flex-col">
-            <div className="flex items-center border-b bg-card px-4 py-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveView("call")}
-                className="mr-2 p-0"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h2 className="text-lg font-semibold">Chat</h2>
-            </div>
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    message={message}
-                    isOwnMessage={message.sender === participantName}
-                  />
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-            </ScrollArea>
-            <div className="border-t p-4">
-              <form onSubmit={handleSendMessage} className="flex space-x-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 rounded-full border border-input bg-background px-4 py-3 text-sm"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="h-12 w-12 rounded-full"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5 rotate-90"
-                  >
-                    <path d="m5 12 14-9v18L5 12z" />
-                  </svg>
-                </Button>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
       <div className="border-t bg-card">
         <Tabs
@@ -339,76 +268,9 @@ function MeetingView({ participantName }: { participantName: string }) {
                 <span className="text-xs">Call</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="chat" className="py-3">
-              <div className="flex flex-col items-center">
-                <MessageSquare className="mb-1 h-5 w-5" />
-                <span className="text-xs">Chat</span>
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="health" className="py-3">
-              <div className="flex flex-col items-center">
-                <Activity className="mb-1 h-5 w-5" />
-                <span className="text-xs">Health</span>
-              </div>
-            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
-      <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <SheetContent side="bottom" className="h-[80vh] rounded-t-xl p-0">
-          <SheetHeader className="border-b px-4 py-3">
-            <SheetTitle>Chat</SheetTitle>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(80vh-60px-70px)] p-4">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  isOwnMessage={message.sender === participantName}
-                />
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-          </ScrollArea>
-          <div className="border-t p-4">
-            <form onSubmit={handleSendMessage} className="flex space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 rounded-full border border-input bg-background px-4 py-3 text-sm"
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="h-12 w-12 rounded-full"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5 rotate-90"
-                >
-                  <path d="m5 12 14-9v18L5 12z" />
-                </svg>
-              </Button>
-            </form>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={isHealthOpen} onOpenChange={setIsHealthOpen}>
-        <SheetContent side="bottom" className="h-[80vh] rounded-t-xl p-0">
-          <SheetHeader className="border-b px-4 py-3">
-            <SheetTitle>Health Data</SheetTitle>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
@@ -416,21 +278,17 @@ function MeetingView({ participantName }: { participantName: string }) {
 export default function MeetingRoom({
   meetingId,
   participantName,
-  authToken,
 }: MeetingRoomProps) {
-  const apiKey = "YOUR_VIDEOSDK_API_KEY"; // Replace with your actual API key
-
   return (
     <MeetingProvider
       config={{
         meetingId,
         micEnabled: true,
-        debugMode: true,
         webcamEnabled: true,
+        debugMode: true,
         name: participantName,
       }}
-      token={authToken}
-      //   reinitiateOnConfigChange={true}
+      token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJmNjMwZmVmYi1lZTJlLTQzOGMtYmQwMi1kNzM4ZTI2NTU4MWUiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc0NjIwODM1NCwiZXhwIjoxNzQ2Mjk0NzU0fQ.uB_J3j0iCnV54JB-Ja4dYTDpZzGuRLLHPaeAogL8gg8"
       joinWithoutUserInteraction={true}
     >
       <MeetingView participantName={participantName} />

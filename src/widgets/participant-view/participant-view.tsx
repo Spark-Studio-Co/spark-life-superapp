@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { MicOff, Shield, Activity } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ export default function ParticipantVideo({
   participant,
   isLocal,
 }: ParticipantVideoProps) {
+  const micRef = useRef<HTMLAudioElement>(null);
+
   const {
     webcamStream,
     micStream,
@@ -29,26 +31,45 @@ export default function ParticipantVideo({
     disableWebcam,
   } = useParticipant(participant.id);
 
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isDoctor, setIsDoctor] = useState(false);
+
+  // Create video stream from webcam track
+  const videoStream = useMemo(() => {
+    if (webcamOn && webcamStream) {
+      const mediaStream = new MediaStream();
+      mediaStream.addTrack(webcamStream.track);
+      return mediaStream;
+    }
+    return null;
+  }, [webcamStream, webcamOn]);
+
+  // Handle audio stream
+  useEffect(() => {
+    if (micRef.current) {
+      if (micOn && micStream) {
+        const mediaStream = new MediaStream();
+        mediaStream.addTrack(micStream.track);
+
+        micRef.current.srcObject = mediaStream;
+        micRef.current
+          .play()
+          .catch((error) => console.error("Audio element play failed", error));
+      } else {
+        micRef.current.srcObject = null;
+      }
+    }
+  }, [micStream, micOn]);
 
   useEffect(() => {
     // Check if the participant is a doctor based on their display name
     setIsDoctor(displayName?.toLowerCase().includes("dr") || false);
   }, [displayName]);
 
-  useEffect(() => {
-    if (webcamOn && webcamStream) {
-      const mediaStream = new MediaStream();
-      mediaStream.addTrack(webcamStream.track);
-      setVideoStream(mediaStream);
-    } else {
-      setVideoStream(null);
-    }
-  }, [webcamStream, webcamOn]);
-
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
+      {/* Hidden audio element for participant's microphone */}
+      <audio ref={micRef} autoPlay playsInline muted={isLocal} />
+
       {videoStream ? (
         <ReactPlayer
           playsinline

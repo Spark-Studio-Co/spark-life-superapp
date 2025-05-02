@@ -48,30 +48,23 @@ export default function VideoChat() {
     <main className="flex min-h-screen flex-col bg-background">
       {!joined ? (
         <div className="flex flex-1 flex-col">
-          {/* App-like header */}
           <div className="flex items-center justify-center bg-primary p-4 text-primary-foreground">
             <Heart className="mr-2 h-6 w-6" />
-            <h1 className="text-xl font-bold">HealthMeet</h1>
+            <h1 className="text-xl font-bold">Spark Meet</h1>
           </div>
-
-          {/* Join meeting form */}
           <div className="flex flex-1 flex-col items-center justify-center p-6">
             <div className="mb-8 flex flex-col items-center">
               <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
                 <Heart className="h-10 w-10 text-primary" />
               </div>
               <h2 className="text-center text-2xl font-bold">
-                Join Consultation
+                Это ваш код: o2ny-p68a-1c02
               </h2>
-              <p className="mt-2 text-center text-sm text-muted-foreground">
-                Connect with healthcare professionals in real-time
-              </p>
             </div>
-
             <form onSubmit={handleJoinMeeting} className="w-full space-y-6">
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
-                  Your Name
+                  Ваше имя
                 </label>
                 <Input
                   id="name"
@@ -86,7 +79,7 @@ export default function VideoChat() {
 
               <div className="space-y-2">
                 <label htmlFor="meetingId" className="text-sm font-medium">
-                  Meeting ID
+                  ID
                 </label>
                 <Input
                   id="meetingId"
