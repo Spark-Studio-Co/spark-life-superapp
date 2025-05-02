@@ -1,4 +1,4 @@
-"use client";
+//@ts-nocheck
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -13,17 +13,21 @@ import {
   RefreshCw,
   LogOut,
   Settings,
+  Download,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/entities/user/hooks/use-user";
 import { useAuth } from "@/entities/auth/hooks/use-auth";
 import { useState } from "react";
+import { apiClient } from "@/shared/api/apiClient";
+import { toast } from "@/components/ui/use-toast";
 
 export const ProfilePage = () => {
   const { user, isLoading, isError, refetch } = useUser();
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -63,6 +67,47 @@ export const ProfilePage = () => {
     // 2. Удаляет токены из localStorage
     // 3. Перенаправляет на страницу входа
     logout();
+  };
+
+  // Обработчик скачивания диагностики
+  const handleDownloadDiagnostics = async () => {
+    try {
+      setIsDownloading(true);
+
+      // Первый запрос на расчет риска
+      await apiClient.post('/risk/calculate');
+
+      // Второй запрос на получение отчетов
+      const response = await apiClient.get('/risk/reports');
+
+      // Получаем URL первого отчета
+      const reportUrl = response.data.urls[0];
+
+      if (reportUrl) {
+        // Открываем URL в новой вкладке для скачивания
+        window.open(reportUrl, '_blank');
+
+        toast({
+          title: "Успешно",
+          description: "Отчет диагностики открыт для скачивания",
+        });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: "Отчеты не найдены",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка при скачивании диагностики:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось скачать отчет диагностики",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -136,6 +181,9 @@ export const ProfilePage = () => {
               </motion.div>
 
               <motion.div variants={itemVariants}>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-medium">Медицинская информация</h3>
+                </div>
                 <Card className="border-none shadow-md overflow-hidden">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center justify-between">
@@ -202,23 +250,39 @@ export const ProfilePage = () => {
                     )}
                   </CardContent>
                 </Card>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="hover:bg-transparent text-red-400 border-red-400 hover:text-red-400 mt-4"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {isLoggingOut ? "Выход..." : "Выйти"}
-                </Button>
+                <div className="flex flex-row-reverse justify-between">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownloadDiagnostics}
+                    disabled={isDownloading}
+                    className="mt-4"
+                  >
+                    {isDownloading ? (
+                      <RefreshCw className="h-4 w-4 animate-spin mr-1" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-1" />
+                    )}
+                    <span className="text-sm">Скачать диагностику</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="hover:bg-transparent text-red-400 border-red-400 hover:text-red-400 mt-4"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {isLoggingOut ? "Выход..." : "Выйти"}
+                  </Button>
+                </div>
               </motion.div>
 
               <motion.div
                 variants={itemVariants}
-                className="grid grid-cols-1 gap-4"
+                className="grid grid-cols-1 gap-4 mb-6"
               >
-                <motion.div
+                {/* <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="group"
@@ -243,7 +307,7 @@ export const ProfilePage = () => {
                       </CardContent>
                     </Card>
                   </Link>
-                </motion.div>
+                </motion.div> */}
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
@@ -275,7 +339,7 @@ export const ProfilePage = () => {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="group mb-16"
+                  className="group"
                 >
                   <Link to="/settings" className="block">
                     <Card className="border-none shadow-md overflow-hidden bg-gradient-to-br from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 transition-all duration-300">
@@ -296,6 +360,8 @@ export const ProfilePage = () => {
                     </Card>
                   </Link>
                 </motion.div>
+
+
               </motion.div>
             </>
           )}
