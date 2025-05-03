@@ -9,17 +9,11 @@ import { Heart } from "lucide-react";
 import MeetingRoom from "@/widgets/meeting-room/meeting-room";
 
 export default function VideoChat() {
-  const [meetingId, setMeetingId] = useState("");
+  const [meetingId, setMeetingId] = useState("o2ny-p68a-1c02");
   const [name, setName] = useState("");
   const [joined, setJoined] = useState(false);
   const [authToken, setAuthToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!meetingId) {
-      setMeetingId(Math.random().toString(36).substring(2, 12));
-    }
-  }, [meetingId]);
 
   const createMeeting = async () => {
     try {
