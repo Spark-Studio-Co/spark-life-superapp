@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Bell, Droplets, Mic, Search, Moon, File } from "lucide-react";
+import { Camera, Bell, Droplets, Mic, Search, Moon, File, Microscope } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { MainLayout } from "@/shared/ui/layout";
@@ -13,6 +13,14 @@ export const ModulesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const modules = [
+    {
+      id: "sparksleep",
+      title: "Детальный анализ эпидермиса",
+      description: "Точечный анализ кожи на выявление потологий",
+      icon: Microscope,
+      color: "bg-purple-500",
+      to: "/spark-epidermis",
+    },
     {
       id: "sparkdoctor",
       title: "SparkDoc",
@@ -50,7 +58,7 @@ export const ModulesPage = () => {
       title: "Напоминания",
       description: "Умные напоминания о лекарствах с AI-предсказаниями",
       icon: Bell,
-      color: "bg-purple-500",
+      color: "bg-yellow-500",
       to: "/reminder",
     },
     {

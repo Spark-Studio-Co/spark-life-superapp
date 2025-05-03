@@ -151,9 +151,15 @@ export default function SparkDocResult() {
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <Badge variant="outline" className={getStatusBadgeClass(result.result.status)}>
-                                        {result.result.status.charAt(0).toUpperCase() + result.result.status.slice(1)}
-                                    </Badge>
+                                    {result.result ? (
+                                        <Badge variant="outline" className={getStatusBadgeClass(result.result.status || 'Норма')}>
+                                            {(result.result.status || 'Норма').charAt(0).toUpperCase() + (result.result.status || 'Норма').slice(1)}
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                                            Статус недоступен
+                                        </Badge>
+                                    )}
                                 </CardContent>
                             </Card>
 
@@ -162,38 +168,45 @@ export default function SparkDocResult() {
                                     <div className="flex justify-between items-center">
                                         <CardTitle>Выявленные диагнозы</CardTitle>
                                         <Badge variant="outline" className="ml-2">
-                                            {result.result.potential_diagnoses.length}
+                                            {result.result && result.result.potential_diagnoses ? result.result.potential_diagnoses.length : 0}
                                         </Badge>
                                     </div>
                                     <CardDescription>Диагнозы, обнаруженные в документе</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    {result.result.potential_diagnoses.map((diagnosis, index) => (
-                                        <motion.div
-                                            key={index}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.1 }}
-                                            className="border rounded-lg p-4"
-                                        >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h3 className="font-medium">{diagnosis.name}</h3>
+                                    {result.result && result.result.potential_diagnoses && result.result.potential_diagnoses.length > 0 ? (
+                                        result.result.potential_diagnoses.map((diagnosis, index) => (
+                                            <motion.div
+                                                key={index}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.1 }}
+                                                className="border rounded-lg p-4"
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h3 className="font-medium">{diagnosis.name}</h3>
+                                                    </div>
+                                                    <HelpCircle className="h-5 w-5 text-muted-foreground cursor-help" />
                                                 </div>
-                                                <HelpCircle className="h-5 w-5 text-muted-foreground cursor-help" />
-                                            </div>
-                                            <div className="space-y-2 mt-3">
-                                                <div className="p-3 bg-muted rounded-md text-sm">
-                                                    <p className="font-medium mb-1">Причина:</p>
-                                                    <p className="text-muted-foreground">{diagnosis.reason}</p>
+                                                <div className="space-y-2 mt-3">
+                                                    <div className="p-3 bg-muted rounded-md text-sm">
+                                                        <p className="font-medium mb-1">Причина:</p>
+                                                        <p className="text-muted-foreground">{diagnosis.reason}</p>
+                                                    </div>
+                                                    <div className="p-3 bg-emerald-50 rounded-md text-sm">
+                                                        <p className="font-medium mb-1 text-emerald-700">Рекомендуемые действия:</p>
+                                                        <p className="text-emerald-600">{diagnosis.recommended_action}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="p-3 bg-emerald-50 rounded-md text-sm">
-                                                    <p className="font-medium mb-1 text-emerald-700">Рекомендуемые действия:</p>
-                                                    <p className="text-emerald-600">{diagnosis.recommended_action}</p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
+                                            </motion.div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-6 border rounded-lg">
+                                            <HelpCircle className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                                            <p className="text-muted-foreground">Диагнозы не обнаружены</p>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
 
@@ -207,7 +220,11 @@ export default function SparkDocResult() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
-                                        <p className="text-emerald-800">{result.result.advice}</p>
+                                        {result.result && result.result.advice ? (
+                                            <p className="text-emerald-800">{result.result.advice}</p>
+                                        ) : (
+                                            <p className="text-emerald-800">Проконсультируйтесь с врачом по поводу результатов анализа. Регулярные профилактические осмотры помогут сохранить ваше здоровье.</p>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>

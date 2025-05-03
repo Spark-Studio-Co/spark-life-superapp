@@ -36,6 +36,8 @@ import SparkTeethResult from "./pages/spark-teeth/result-page";
 import SparkDoc from "./pages/spark-doctor/page";
 import SparkDocResult from "./pages/spark-doc-result/page";
 import VideoChat from "./pages/video-chat/[id]/page";
+import SparkEpidermis from "./pages/spark-epidermis/page";
+import SparkEpidermisResult from "./pages/spark-epidermis-result/page";
 
 // Component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -293,6 +295,22 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spark-epidermis"
+          element={
+            <ProtectedRoute>
+              <SparkEpidermis />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spark-epidermis-result"
+          element={
+            <ProtectedRoute>
+              <SparkEpidermisResult />
             </ProtectedRoute>
           }
         />

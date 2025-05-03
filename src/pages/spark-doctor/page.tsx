@@ -1,12 +1,35 @@
-"use client"
+//@ts-nocheck
 
 import { useState, useEffect, useRef } from "react"
-import { Camera, ImageIcon, Shield, Activity, ArrowLeft, FileText } from 'lucide-react'
+import { Camera, ImageIcon, Shield, Activity, ArrowLeft, FileText, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { apiClient } from "@/shared/api/apiClient"
 import { MainLayout } from "@/shared/ui/layout"
+
+// Интерфейс для элемента истории анализов документов
+interface HistoryItem {
+    id: number;
+    user_id: number;
+    image_url: string;
+    result: {
+        id: number;
+        result: {
+            advice: string;
+            status: string;
+            potential_diagnoses: Array<{
+                name: string;
+                reason: string;
+                recommended_action: string;
+            }>;
+        };
+        user_id: number;
+        image_url: string;
+        created_at: string;
+    };
+    created_at: string;
+}
 
 export default function SparkDoc() {
     const navigation = useNavigate()
@@ -15,12 +38,151 @@ export default function SparkDoc() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [cameraError, setCameraError] = useState(false)
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [historyData, setHistoryData] = useState<HistoryItem[]>([])
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
     useEffect(() => {
         if (selectedImage && !isProcessing) {
             processImage()
         }
     }, [selectedImage])
+
+    // Загрузка истории анализов при монтировании компонента
+    useEffect(() => {
+        fetchHistoryData()
+    }, [])
+
+    // Дополнительная загрузка истории анализов при открытии выпадающего списка
+    useEffect(() => {
+        if (historyOpen) {
+            fetchHistoryData()
+        }
+    }, [historyOpen])
+
+    // Функция для загрузки истории анализов
+    const fetchHistoryData = async () => {
+        setIsLoadingHistory(true)
+        try {
+            // Fetch analysis history from API
+            const response = await apiClient.get("/analysis/history")
+            console.log("History data from API:", response.data)
+
+            // Преобразуем данные в массив
+            let historyItems: HistoryItem[] = []
+
+            if (Array.isArray(response.data)) {
+                // If it's already an array, use it directly
+                historyItems = response.data
+            } else if (response.data && Array.isArray(response.data.data)) {
+                // If the data is nested in a 'data' property
+                historyItems = response.data.data
+            } else {
+                // Fallback for other structures
+                console.warn("Unexpected API response structure:", response.data)
+                historyItems = []
+            }
+
+            // Фильтруем дубликаты на основе уникальных идентификаторов
+            const uniqueIds = new Set()
+            const filteredItems = historyItems.filter(item => {
+                // Используем комбинацию id и времени создания для уникальности
+                const uniqueKey = `${item.id}_${item.created_at}`
+                if (uniqueIds.has(uniqueKey)) {
+                    return false // Это дубликат, пропускаем
+                }
+                uniqueIds.add(uniqueKey)
+                return true
+            })
+
+            // Сортируем по времени создания (сначала новые)
+            const sortedItems = filteredItems.sort((a, b) => {
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            })
+
+            setHistoryData(sortedItems)
+        } catch (error) {
+            console.error("Ошибка при загрузке истории:", error)
+            setHistoryData([])
+        } finally {
+            setIsLoadingHistory(false)
+        }
+    }
+
+    // Функция для форматирования даты
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+        return new Intl.DateTimeFormat('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date)
+    }
+
+    // Функция для просмотра истории анализа
+    const viewHistoryItem = (item: HistoryItem) => {
+        try {
+            console.log('History item to view:', item)
+
+            // Определяем тип для потенциальных диагнозов
+            type PotentialDiagnosis = {
+                name: string
+                reason: string
+                recommended_action: string
+            }
+
+            // Определяем тип для результата
+            type ResultData = {
+                id: number
+                user_id: number
+                image_url: string
+                created_at: string
+                result: {
+                    advice: string
+                    status: string
+                    potential_diagnoses: PotentialDiagnosis[]
+                }
+            }
+
+            // Создаем базовый объект результата
+            const defaultDiagnosis: PotentialDiagnosis = {
+                name: 'Анализ документа',
+                reason: 'Данные из истории анализов',
+                recommended_action: 'Проконсультируйтесь с врачом по поводу результатов анализа'
+            }
+
+            // Формируем объект для результата
+            const resultData: ResultData = {
+                id: item.id,
+                user_id: item.user_id,
+                image_url: item.image_url,
+                created_at: item.created_at,
+                result: {
+                    advice: '',
+                    status: 'Анализ документа',
+                    potential_diagnoses: [defaultDiagnosis]
+                }
+            }
+
+            // Если есть данные результата, используем их
+            if (item.result && item.result.result) {
+                resultData.result = item.result.result
+            }
+
+            // Сохраняем выбранный элемент истории в localStorage
+            localStorage.removeItem('document_error')
+            localStorage.setItem('document_result', JSON.stringify(resultData))
+
+            // Переходим на страницу результатов
+            navigation('/spark-doctor-result')
+        } catch (error) {
+            console.error('Ошибка при обработке элемента истории:', error)
+            localStorage.setItem('document_error', JSON.stringify({ message: 'Ошибка при загрузке данных из истории' }))
+            navigation('/spark-doctor-result')
+        }
+    }
 
     // Очистка ресурсов камеры при размонтировании компонента
     useEffect(() => {
@@ -66,7 +228,7 @@ export default function SparkDoc() {
                 }
                 videoRef.current.srcObject = null; // Явно очищаем srcObject
             }
-            
+
             setCameraActive(true)
             setCameraError(false)
 
@@ -78,14 +240,14 @@ export default function SparkDoc() {
                     height: { ideal: 720 },
                     // Добавляем дополнительные настройки для мобильных устройств
                     frameRate: { ideal: 30 },
-                    aspectRatio: { ideal: 4/3 }
+                    aspectRatio: { ideal: 4 / 3 }
                 }
             }
 
             console.log('Запрашиваем доступ к камере с параметрами:', constraints);
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
             console.log('Доступ к камере получен, треки:', stream.getTracks().length);
-            
+
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 // Используем промис для воспроизведения
@@ -209,10 +371,10 @@ export default function SparkDoc() {
                             console.log(`Трек ${track.kind} остановлен, активен: ${track.readyState}`);
                         })
                     }
-                    
+
                     // Явно очищаем srcObject
                     video.srcObject = null;
-                    
+
                     // Добавляем небольшую задержку перед изменением состояния
                     setTimeout(() => {
                         setCameraActive(false)
@@ -222,7 +384,7 @@ export default function SparkDoc() {
             } catch (error) {
                 console.error('Ошибка при захвате фото:', error);
                 setCameraActive(false);
-                
+
                 // Остановка камеры в случае ошибки
                 try {
                     if (videoRef.current && videoRef.current.srcObject) {
@@ -247,22 +409,96 @@ export default function SparkDoc() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex items-center"
+                    className="flex items-center justify-between"
                 >
+                    <div className="flex items-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="mr-2 text-white hover:bg-white/20"
+                            onClick={() => navigation(-1)}
+                        >
+                            <ArrowLeft className="h-5 w-5" />
+                            <span className="sr-only">Назад</span>
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">SparkDoc</h1>
+                            <p className="text-emerald-100">Анализ медицинских документов</p>
+                        </div>
+                    </div>
+
+                    {/* История анализов */}
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className="mr-2 text-white hover:bg-white/20"
-                        onClick={() => navigation(-1)}
+                        className="text-white hover:bg-white/20 flex items-center gap-1"
+                        onClick={() => setHistoryOpen(!historyOpen)}
                     >
-                        <ArrowLeft className="h-5 w-5" />
-                        <span className="sr-only">Назад</span>
+                        <Clock className="h-4 w-4" />
+                        <span>История</span>
+                        {historyOpen ? (
+                            <ChevronUp className="h-4 w-4" />
+                        ) : (
+                            <ChevronDown className="h-4 w-4" />
+                        )}
                     </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">SparkDoc</h1>
-                        <p className="text-emerald-100">Анализ медицинских документов</p>
-                    </div>
                 </motion.div>
+
+                {/* History dropdown */}
+                <AnimatePresence>
+                    {historyOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 shadow-lg">
+                                <h3 className="text-white text-sm font-medium mb-2">История анализов</h3>
+                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    {isLoadingHistory ? (
+                                        <div className="text-white/70 text-center py-2">Загрузка истории...</div>
+                                    ) : historyData.length === 0 ? (
+                                        <div className="text-white/70 text-center py-2">История пуста</div>
+                                    ) : (
+                                        historyData.map((item) => (
+                                            <motion.button
+                                                key={item.id}
+                                                className="w-full bg-white/20 hover:bg-white/30 rounded-lg p-3 text-left flex items-center justify-between transition-colors"
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => viewHistoryItem(item)}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="w-10 h-10 rounded-md bg-cover bg-center"
+                                                        style={{ backgroundImage: `url(${item.image_url})` }}
+                                                    />
+                                                    <div className="flex flex-col w-full">
+                                                        <div>
+                                                            <p className="text-white font-medium">
+                                                                {item.result?.potential_diagnoses &&
+                                                                    item.result?.potential_diagnoses[0].name}
+                                                            </p>
+                                                            <p className="text-white/70 text-xs">{formatDate(item.created_at)}</p>
+                                                        </div>
+                                                        {item.result?.status && (
+                                                            <div className={`mt-2 px-2 text-center py-1 rounded-full text-xs font-medium ${item.result.status.includes("отклонения")
+                                                                ? "bg-yellow-500/20 text-yellow-100"
+                                                                : "bg-green-500/20 text-green-100"}`}>
+                                                                {item.result?.status}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </motion.button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
             <div className="px-4 py-12">
                 <motion.div

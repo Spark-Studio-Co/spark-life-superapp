@@ -1,13 +1,39 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Camera, ImageIcon, Shield, Activity, ArrowLeft, Info } from "lucide-react"
+import { Camera, ImageIcon, Shield, Activity, ArrowLeft, Info, Clock, ChevronDown, ChevronUp } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useNavigate } from "react-router-dom"
 import { MainLayout } from "@/shared/ui/layout"
 import { apiClient } from "@/shared/api/apiClient"
+
+interface HistoryItem {
+    id: number;
+    user_id: number;
+    result: {
+        time: number;
+        image: {
+            width: number;
+            height: number;
+        };
+        predictions: Array<{
+            x: number;
+            y: number;
+            class: string;
+            width: number;
+            height: number;
+            class_id: number;
+            confidence: number;
+            detection_id: string;
+        }>;
+        inference_id: string;
+    };
+    image_url: string;
+    created_at: string;
+}
+
 
 export default function SparkTeeth() {
     const navigation = useNavigate()
@@ -16,12 +42,54 @@ export default function SparkTeeth() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [cameraError, setCameraError] = useState(false)
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [historyData, setHistoryData] = useState<HistoryItem[]>([])
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
     useEffect(() => {
         if (selectedImage && !isProcessing) {
             processImage()
         }
     }, [selectedImage])
+
+    // Load history data when component mounts
+    useEffect(() => {
+        fetchHistoryData()
+    }, [])
+
+    // Function to fetch history data from API
+    const fetchHistoryData = async () => {
+        setIsLoadingHistory(true)
+        try {
+            // Fetch dental check history from API
+            const response = await apiClient.get("/dental-check/history")
+            setHistoryData(response.data)
+        } catch (error) {
+            console.error("Ошибка при загрузке истории:", error)
+        } finally {
+            setIsLoadingHistory(false)
+        }
+    }
+
+    // Function to format date in a readable way
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
+
+    // Function to view a specific history item
+    const viewHistoryItem = (item: HistoryItem) => {
+        // Save the selected history item to localStorage
+        localStorage.setItem('sparkteeth_result', JSON.stringify(item))
+        // Navigate to the result page
+        navigation('/spark-teeth-result')
+    }
 
     // Очистка ресурсов камеры при размонтировании компонента
     useEffect(() => {
@@ -67,7 +135,7 @@ export default function SparkTeeth() {
                 }
                 videoRef.current.srcObject = null; // Явно очищаем srcObject
             }
-            
+
             setCameraActive(true)
             setCameraError(false)
 
@@ -77,16 +145,15 @@ export default function SparkTeeth() {
                     facingMode: "user", // Используем фронтальную камеру для зубов
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
-                    // Добавляем дополнительные настройки для мобильных устройств
                     frameRate: { ideal: 30 },
-                    aspectRatio: { ideal: 4/3 }
+                    aspectRatio: { ideal: 4 / 3 }
                 }
             }
 
             console.log('Запрашиваем доступ к камере с параметрами:', constraints);
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
             console.log('Доступ к камере получен, треки:', stream.getTracks().length);
-            
+
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 // Используем промис для воспроизведения
@@ -217,17 +284,88 @@ export default function SparkTeeth() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex items-center"
+                    className="flex items-center justify-between"
                 >
-                    <Button variant="ghost" size="icon" className="mr-2 text-white hover:bg-white/20" onClick={() => navigation('/')}>
-                        <ArrowLeft className="h-5 w-5" />
-                        <span className="sr-only">Назад</span>
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">SparkTeeth</h1>
-                        <p className="text-teal-100">Онлайн диагностика полости рта</p>
+                    <div className="flex items-center">
+                        <Button variant="ghost" size="icon" className="mr-2 text-white hover:bg-white/20" onClick={() => navigation('/')}>
+                            <ArrowLeft className="h-5 w-5" />
+                            <span className="sr-only">Назад</span>
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">SparkTeeth</h1>
+                            <p className="text-teal-100 text-sm">Онлайн диагностика полости рта</p>
+                        </div>
                     </div>
+
+                    {/* History button */}
+                    {historyData.length > 0 && (
+                        <Button
+                            variant="ghost"
+                            className="text-white hover:bg-white/20 flex items-center gap-1"
+                            onClick={() => setHistoryOpen(!historyOpen)}
+                        >
+                            <Clock className="h-4 w-4" />
+                            <span>История</span>
+                            {historyOpen ? (
+                                <ChevronUp className="h-4 w-4" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4" />
+                            )}
+                        </Button>
+                    )}
                 </motion.div>
+
+                {/* History dropdown */}
+                <AnimatePresence>
+                    {historyOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 shadow-lg">
+                                <h3 className="text-white text-sm font-medium mb-2">История анализов</h3>
+                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    {isLoadingHistory ? (
+                                        <div className="text-white/70 text-center py-2">Загрузка истории...</div>
+                                    ) : historyData.length === 0 ? (
+                                        <div className="text-white/70 text-center py-2">История пуста</div>
+                                    ) : (
+                                        historyData.map((item) => (
+                                            <motion.button
+                                                key={item.id}
+                                                className="w-full bg-white/20 hover:bg-white/30 rounded-lg p-3 text-left flex items-center justify-between transition-colors"
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => viewHistoryItem(item)}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="w-10 h-10 rounded-md bg-cover bg-center"
+                                                        style={{ backgroundImage: `url(${item.image_url})` }}
+                                                    />
+                                                    <div>
+                                                        <p className="text-white font-medium">
+                                                            {item.result.predictions.length > 0
+                                                                ? `${item.result.predictions[0].class.charAt(0).toUpperCase() + item.result.predictions[0].class.slice(1)}`
+                                                                : "Анализ зубов"}
+                                                        </p>
+                                                        <p className="text-white/70 text-xs">{formatDate(item.created_at)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${item.result.predictions.length > 0 && item.result.predictions[0].class === 'healthy' ? 'bg-green-500/20 text-green-100' : 'bg-yellow-500/20 text-yellow-100'}`}>
+                                                    {item.result.predictions.length > 0 && item.result.predictions[0].class === 'healthy' ? 'Здоровые' : 'Требует внимания'}
+                                                </div>
+                                            </motion.button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
             <div className="px-4 py-12">
                 <motion.div

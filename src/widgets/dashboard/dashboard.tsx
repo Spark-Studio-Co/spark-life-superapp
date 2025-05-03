@@ -1,7 +1,5 @@
 //@ts-nocheck
 
-"use client";
-
 import { motion } from "framer-motion";
 import {
   Camera,
@@ -12,6 +10,7 @@ import {
   Bell,
   RefreshCw,
   File,
+  Microscope
 } from "lucide-react";
 
 import type { QuickAction } from "@/entities/quick-actions/model/types";
@@ -49,8 +48,8 @@ export const DashboardPage = () => {
       description: notification.isCompleted
         ? "Выполнено"
         : isAlert
-        ? `Вчера вы пропустили приём ${notification.title}`
-        : `Следующий приём через ${notification.time}`,
+          ? `Вчера вы пропустили приём ${notification.title}`
+          : `Следующий приём через ${notification.time}`,
       time: notification.time,
       isAlert,
       isCompleted: notification.isCompleted,
@@ -89,18 +88,18 @@ export const DashboardPage = () => {
       to: "/spark-doctor",
     },
     {
+      id: "sparksleep",
+      title: "Детальный анализ эпидермиса",
+      icon: Microscope,
+      color: "bg-purple-500",
+      to: "/spark-epidermis",
+    },
+    {
       id: "sparkcare",
       title: "AI-консультант",
       icon: MessageSquare,
       color: "bg-blue-500",
       to: "/ai-assistent",
-    },
-    {
-      id: "sparksleep",
-      title: "Трекер сна",
-      icon: Moon,
-      color: "bg-[#38bdf8]",
-      to: "/sleep",
     },
   ];
 
