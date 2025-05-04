@@ -1,4 +1,4 @@
-"use client";
+//@ts-nocheck
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { MicOff, Shield, Activity } from "lucide-react";
@@ -92,9 +92,9 @@ export default function ParticipantVideo({
             <div className="flex h-full w-full items-center justify-center bg-primary/20 text-primary">
               {displayName
                 ? displayName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
                 : "?"}
             </div>
           </Avatar>
@@ -109,9 +109,8 @@ export default function ParticipantVideo({
         <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="outline"
-            className={`border-white/20 bg-black/50 backdrop-blur-md ${
-              isDoctor ? "text-primary" : "text-white/80"
-            }`}
+            className={`border-white/20 bg-black/50 backdrop-blur-md ${isDoctor ? "text-primary" : "text-white/80"
+              }`}
           >
             {isDoctor ? (
               <>

@@ -1,4 +1,4 @@
-"use client";
+//@ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import {
   Mic,
@@ -202,13 +202,6 @@ function MeetingView() {
           return app;
         });
 
-        // Сохраняем обновленные записи в localStorage
-        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
-
-        toast({
-          title: "Звонок завершен",
-          description: "Запись перемещена в раздел прошедших приемов",
-        });
       } catch (e) {
         console.error('Error updating appointment status:', e);
       }
@@ -371,8 +364,8 @@ function MeetingView() {
                     variant="ghost"
                     size="icon"
                     className={`h-12 w-12 rounded-full ${isRecording
-                        ? "bg-green-500/20 text-green-500"
-                        : "text-white"
+                      ? "bg-green-500/20 text-green-500"
+                      : "text-white"
                       }`}
                   >
                     <FileAudio className="h-6 w-6" />

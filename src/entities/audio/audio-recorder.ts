@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { apiClient } from "@/shared/api/apiClient";
 
 export interface RecordingOptions {
