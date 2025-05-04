@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Mic,
   MicOff,
@@ -12,6 +11,8 @@ import {
   ArrowLeft,
   Clipboard,
   Shield,
+  LogOut,
+  FileAudio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/entities/user/hooks/use-user";
 import ParticipantVideo from "../participant-view/participant-view";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  audioRecorder,
+  RecordingOptions,
+} from "@/entities/audio/audio-recorder";
 
 interface MeetingRoomProps {
   meetingId: string;
@@ -29,19 +35,13 @@ interface MeetingRoomProps {
   authToken: string;
 }
 
-function MeetingView({ participantName }: { participantName: string }) {
+function MeetingView() {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<"call" | "chat" | "health">(
     "call"
   );
-
   const [showControls, setShowControls] = useState(true);
-
-  // Get user data from the hook
   const { user, isLoading: isUserLoading, getInitials } = useUser();
-
-  // Get meeting methods and state
-  const meeting = useMeeting();
   const {
     participants,
     localParticipant,
@@ -49,11 +49,28 @@ function MeetingView({ participantName }: { participantName: string }) {
     toggleMic,
     enableWebcam,
     disableWebcam,
-  } = meeting;
+  } = useMeeting();
+  const { toast } = useToast();
 
-  // Local participant state
   const [isMicOn, setIsMicOn] = useState(true);
   const [isWebcamOn, setIsWebcamOn] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState<string | null>(null);
+
+  // Используем useRef для хранения ID пользователей
+  const patientIdRef = useRef<number>(0);
+  const doctorIdRef = useRef<number>(0);
+
+  useEffect(() => {
+    // Устанавливаем ID пользователей из данных пользователя
+    if (user) {
+      if (user.role === "doctor") {
+        doctorIdRef.current = user.id;
+      } else {
+        patientIdRef.current = user.id;
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     if (activeView === "call") {
@@ -65,13 +82,92 @@ function MeetingView({ participantName }: { participantName: string }) {
     }
   }, [activeView, showControls]);
 
+  // Автоматически начинаем запись при входе в комнату
+  useEffect(() => {
+    if (localParticipant && !isRecording) {
+      startRecording();
+    }
+
+    // Останавливаем запись при выходе из компонента
+    return () => {
+      if (isRecording) {
+        stopRecording();
+      }
+    };
+  }, [localParticipant]);
+
+  const startRecording = async () => {
+    try {
+      await audioRecorder.startRecording();
+      setIsRecording(true);
+      toast({
+        title: "Запись начата",
+        description: "Запись разговора началась автоматически",
+      });
+    } catch (error) {
+      console.error("Ошибка при начале записи:", error);
+      toast({
+        title: "Ошибка записи",
+        description: "Не удалось начать запись разговора",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      if (!isRecording) return;
+
+      // Проверяем, что у нас есть ID пациента и врача
+      if (patientIdRef.current === 0 || doctorIdRef.current === 0) {
+        throw new Error("ID пациента или врача не определены");
+      }
+
+      const options: RecordingOptions = {
+        patientId: patientIdRef.current,
+        doctorId: doctorIdRef.current,
+      };
+
+      const text = await audioRecorder.stopRecording(options);
+      setIsRecording(false);
+
+      if (text) {
+        setTranscription(text);
+        toast({
+          title: "Транскрипция получена",
+          description: "Запись разговора успешно обработана",
+        });
+      }
+    } catch (error) {
+      console.error("Ошибка при остановке записи:", error);
+      setIsRecording(false);
+      toast({
+        title: "Ошибка транскрипции",
+        description: "Не удалось обработать запись разговора",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      await stopRecording();
+    } else {
+      await startRecording();
+    }
+  };
+
   const handleScreenTap = () => {
     if (activeView === "call") {
       setShowControls(true);
     }
   };
 
-  const handleLeaveMeeting = () => {
+  const handleLeaveMeeting = async () => {
+    // Останавливаем запись перед выходом из встречи
+    if (isRecording) {
+      await stopRecording();
+    }
     leave();
     navigate("/");
   };
@@ -90,23 +186,18 @@ function MeetingView({ participantName }: { participantName: string }) {
     setIsWebcamOn(!isWebcamOn);
   };
 
-  // Convert participants map to array
   const participantsArr = [...participants.values()];
 
-  // Determine if the user is a doctor based on their role
   const isDoctor = user?.role === "doctor";
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      {/* Main content based on active view */}
       <div
         className="relative flex flex-1 flex-col overflow-hidden"
         onClick={handleScreenTap}
       >
-        {/* Call View */}
         {activeView === "call" && (
           <>
-            {/* Floating header - only visible when controls are shown */}
             {showControls && (
               <div className="absolute left-0 right-0 top-0 z-10 bg-gradient-to-b from-black/70 to-transparent p-4">
                 <div className="flex items-center justify-between">
@@ -121,7 +212,7 @@ function MeetingView({ participantName }: { participantName: string }) {
                     </Button>
                     <div>
                       <h1 className="text-lg font-semibold text-white">
-                        Health Consultation
+                        Медицинская Консультация
                       </h1>
                       <div className="flex items-center">
                         <Badge
@@ -129,7 +220,7 @@ function MeetingView({ participantName }: { participantName: string }) {
                           className="border-white/30 bg-black/30 text-white"
                         >
                           {localParticipant?.id?.substring(0, 8) ||
-                            "Loading..."}
+                            "Загрузка..."}
                         </Badge>
                         <Button
                           variant="ghost"
@@ -160,12 +251,12 @@ function MeetingView({ participantName }: { participantName: string }) {
                           {isDoctor ? (
                             <>
                               <Shield className="mr-1 h-3 w-3" />
-                              Doctor
+                              Врач
                             </>
                           ) : (
                             <>
                               <Activity className="mr-1 h-3 w-3" />
-                              Patient
+                              Пациент
                             </>
                           )}
                         </Badge>
@@ -194,7 +285,7 @@ function MeetingView({ participantName }: { participantName: string }) {
               ) : (
                 <div className="flex h-full items-center justify-center">
                   <p className="text-white/70">
-                    Waiting for participants to join...
+                    Ожидание подключения участников...
                   </p>
                 </div>
               )}
@@ -233,6 +324,19 @@ function MeetingView({ participantName }: { participantName: string }) {
                   </Button>
 
                   <Button
+                    onClick={toggleRecording}
+                    variant="ghost"
+                    size="icon"
+                    className={`h-12 w-12 rounded-full ${
+                      isRecording
+                        ? "bg-green-500/20 text-green-500"
+                        : "text-white"
+                    }`}
+                  >
+                    <FileAudio className="h-6 w-6" />
+                  </Button>
+
+                  <Button
                     onClick={handleLeaveMeeting}
                     variant="destructive"
                     size="icon"
@@ -251,6 +355,14 @@ function MeetingView({ participantName }: { participantName: string }) {
                 </div>
               </div>
             )}
+
+            {/* Индикатор записи */}
+            {isRecording && (
+              <div className="absolute top-4 right-4 z-20 flex items-center space-x-2 rounded-full bg-black/50 px-3 py-1 text-white">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-red-500"></div>
+                <span className="text-xs">Запись</span>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -261,11 +373,14 @@ function MeetingView({ participantName }: { participantName: string }) {
             setActiveView(value as "call" | "chat" | "health")
           }
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="call" className="py-3">
-              <div className="flex flex-col items-center">
-                <Video className="mb-1 h-5 w-5" />
-                <span className="text-xs">Call</span>
+              <div
+                className="flex flex-col items-center"
+                onClick={() => navigate("/")}
+              >
+                <LogOut className="mb-1 h-5 w-5 text-red-500" />
+                <span className="text-xs text-red-500">Выйти</span>
               </div>
             </TabsTrigger>
           </TabsList>
@@ -285,11 +400,11 @@ export default function MeetingRoom({
         meetingId,
         micEnabled: true,
         webcamEnabled: true,
-        debugMode: true,
+        debugMode: false,
         name: participantName,
       }}
-      token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJmNjMwZmVmYi1lZTJlLTQzOGMtYmQwMi1kNzM4ZTI2NTU4MWUiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc0NjIwODM1NCwiZXhwIjoxNzQ2Mjk0NzU0fQ.uB_J3j0iCnV54JB-Ja4dYTDpZzGuRLLHPaeAogL8gg8"
       joinWithoutUserInteraction={true}
+      token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJmNjMwZmVmYi1lZTJlLTQzOGMtYmQwMi1kNzM4ZTI2NTU4MWUiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc0NjM4MDM0NCwiZXhwIjoxNzQ2NDY2NzQ0fQ.Dhd1ZWYXL2a8JSYB16OCgWnWCtwbU_EO7dzlLXIhl90"
     >
       <MeetingView participantName={participantName} />
     </MeetingProvider>

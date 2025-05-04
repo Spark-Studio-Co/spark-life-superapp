@@ -37,7 +37,6 @@ const refreshToken = async (refresh: string) => {
   }
 };
 
-// Global flag to avoid infinite loops
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
