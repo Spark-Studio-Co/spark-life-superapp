@@ -14,7 +14,7 @@ export const ModulesPage = () => {
 
   const modules = [
     {
-      id: "sparksleep",
+      id: "sparkepidermis",
       title: "Детальный анализ эпидермиса",
       description: "Точечный анализ кожи на выявление потологий",
       icon: Microscope,

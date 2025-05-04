@@ -58,7 +58,7 @@ export default function SparkEpidermis() {
     setIsLoadingHistory(true)
     try {
       // Fetch history data from the API
-      const response = await apiClient.get("skiniver/history")
+      const response = await apiClient.get("skiniver/history-detailed")
       console.log("History data from API:", response.data)
 
       // Set the history data from the API response
