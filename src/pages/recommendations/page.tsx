@@ -9,9 +9,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Building2, MapPin, ArrowLeft, CalendarPlus, Info, Star, Activity, Clock, Phone } from "lucide-react"
+import { Building2, MapPin, ArrowLeft, CalendarPlus, Info, Star, Activity, Clock, Phone, X, Calendar, Loader2 } from "lucide-react"
 import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom"
 import { apiClient } from "@/shared/api/apiClient"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { format } from "date-fns"
+import { ru } from "date-fns/locale"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 
 interface Location {
     lat: number;
@@ -80,20 +88,20 @@ interface Service {
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     // Радиус Земли в километрах
     const R = 6371;
-    
+
     // Перевод градусов в радианы
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    
+
     // Формула гаверсинуса
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Расстояние в километрах
-    
+
     return distance;
 }
 
@@ -108,6 +116,19 @@ function formatDistance(distance: number): string {
     }
 }
 
+// Interface for appointment data
+interface Appointment {
+    id: string;
+    clinicName: string;
+    clinicAddress: string;
+    date: string;
+    time: string;
+    name: string;
+    phone: string;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    createdAt: string;
+}
+
 export default function RecommendedClinicsPage() {
     const navigation = useNavigate()
     const location = useLocation()
@@ -119,7 +140,18 @@ export default function RecommendedClinicsPage() {
     const [error, setError] = useState<string | null>(null)
     const [analysisType, setAnalysisType] = useState<string | null>(null)
     // Текущие координаты пользователя (по умолчанию - центр Алматы)
-    const [userLocation, setUserLocation] = useState<{lat: number, lon: number}>({ lat: 43.238949, lon: 76.889709 })
+    const [userLocation, setUserLocation] = useState<{ lat: number, lon: number }>({ lat: 43.238949, lon: 76.889709 })
+
+    // State for appointment modal
+    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
+    const [selectedClinic, setSelectedClinic] = useState<DentalClinic | null>(null)
+    const [appointmentDate, setAppointmentDate] = useState<Date>(new Date())
+    const [appointmentTime, setAppointmentTime] = useState("09:00")
+    const [userName, setUserName] = useState("")
+    const [userPhone, setUserPhone] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [appointments, setAppointments] = useState<Appointment[]>([])
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
     // Mock data for clinic details
     const clinicDetails: Record<
@@ -205,7 +237,17 @@ export default function RecommendedClinicsPage() {
                 }
             );
         }
-        
+
+        // Load appointments from localStorage
+        const savedAppointments = localStorage.getItem('appointments')
+        if (savedAppointments) {
+            try {
+                setAppointments(JSON.parse(savedAppointments))
+            } catch (e) {
+                console.error('Error loading appointments from localStorage:', e)
+            }
+        }
+
         // Extract analysis type from URL search params if present
         const type = searchParams.get('type');
         if (type) {
@@ -252,31 +294,31 @@ export default function RecommendedClinicsPage() {
 
                 // Fetch clinics from the API
                 const endpoint = '/2gis-clinics/search';
-                
+
                 // Подготовка параметров запроса
                 const apiParams: Record<string, string | number> = {
                     category,
                     query,
                     pageSize: 10
                 };
-                
+
                 // Добавляем параметры сортировки из URL, если они есть
                 const sortByRating = searchParams.get('sortByRating');
                 const sortByPrice = searchParams.get('sortByPrice');
-                
+
                 if (sortByRating) {
                     apiParams.sortByRating = sortByRating;
                 } else {
                     // По умолчанию сортируем по рейтингу по убыванию
                     apiParams.sortByRating = 'desc';
                 }
-                
+
                 if (sortByPrice) {
                     apiParams.sortByPrice = sortByPrice;
                 }
-                
+
                 console.log('API params:', apiParams);
-                
+
                 const response = await apiClient.get(endpoint, {
                     params: apiParams
                 });
@@ -300,11 +342,11 @@ export default function RecommendedClinicsPage() {
                             "3.5 км",
                             "4.2 км"
                         ];
-                        
+
                         // Выбираем расстояние по индексу клиники
                         const distanceIndex = index % distances.length;
                         const distanceStr = distances[distanceIndex];
-                        
+
                         return {
                             ...clinic,
                             distance: distanceStr
@@ -482,6 +524,57 @@ export default function RecommendedClinicsPage() {
         return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
     }
 
+    // Generate time slots for the appointment form
+    const timeSlots = [
+        "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+        "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
+    ];
+
+    // Handle appointment form submission
+    const handleAppointmentSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        if (!selectedClinic) return;
+
+        // Create new appointment object
+        const newAppointment: Appointment = {
+            id: Date.now().toString(),
+            clinicName: selectedClinic.name,
+            clinicAddress: selectedClinic.address,
+            date: format(appointmentDate, 'yyyy-MM-dd'),
+            time: appointmentTime,
+            name: userName,
+            phone: userPhone,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
+
+        // Add to appointments list
+        const updatedAppointments = [...appointments, newAppointment];
+        setAppointments(updatedAppointments);
+
+        // Save to localStorage
+        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+
+        // Show success message and reset form
+        setTimeout(() => {
+            setIsSubmitting(false);
+            setShowSuccessMessage(true);
+
+            // Reset form after showing success message
+            setTimeout(() => {
+                setShowSuccessMessage(false);
+                setIsAppointmentModalOpen(false);
+                setUserName('');
+                setUserPhone('');
+                setAppointmentDate(new Date());
+                setAppointmentTime('09:00');
+            }, 2000);
+        }, 1000);
+    };
+
     return (
         <MainLayout>
             <div className="bg-gradient-to-r from-blue-600 to-blue-400 px-4 pt-6 pb-6">
@@ -619,7 +712,10 @@ export default function RecommendedClinicsPage() {
                                                     <Button
                                                         variant="default"
                                                         className="flex-1 bg-blue-500 hover:bg-blue-600"
-                                                        onClick={() => navigation(`/clinics/${index}`)}
+                                                        onClick={() => {
+                                                            setSelectedClinic(clinic);
+                                                            setIsAppointmentModalOpen(true);
+                                                        }}
                                                     >
                                                         <CalendarPlus className="h-4 w-4 mr-2" />
                                                         Записаться на прием
@@ -723,6 +819,126 @@ export default function RecommendedClinicsPage() {
                     </div>
                 )}
             </div>
+
+            <Dialog open={isAppointmentModalOpen} onOpenChange={setIsAppointmentModalOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Запись на прием</DialogTitle>
+                    </DialogHeader>
+
+                    {selectedClinic && (
+                        <div className="mt-2 mb-4">
+                            <div className="font-medium text-gray-700">{selectedClinic.name}</div>
+                            <div className="flex items-center mt-1 text-sm text-gray-500">
+                                <MapPin className="h-4 w-4 mr-1 text-blue-500" />
+                                <span>{selectedClinic.address}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {showSuccessMessage ? (
+                        <div className="py-6 flex flex-col items-center justify-center text-center">
+                            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">Запись успешно создана!</h3>
+                            <p className="text-sm text-gray-500">Вы можете просмотреть свои записи в разделе "Записи к врачу"</p>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleAppointmentSubmit} className="space-y-4 py-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="appointment-date">Дата</Label>
+                                    <div className="relative">
+                                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                            <Calendar className="h-4 w-4 text-gray-500" />
+                                        </div>
+                                        <Input
+                                            id="appointment-date"
+                                            type="date"
+                                            className="pl-10"
+                                            value={format(appointmentDate, 'yyyy-MM-dd')}
+                                            onChange={(e) => {
+                                                const date = e.target.value;
+                                                if (date) {
+                                                    setAppointmentDate(new Date(date));
+                                                }
+                                            }}
+                                            min={format(new Date(), 'yyyy-MM-dd')}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="appointment-time">Время</Label>
+                                    <select
+                                        id="appointment-time"
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                        value={appointmentTime}
+                                        onChange={(e) => setAppointmentTime(e.target.value)}
+                                        required
+                                    >
+                                        {timeSlots.map((time) => (
+                                            <option key={time} value={time}>
+                                                {time}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="user-name">Ваше имя</Label>
+                                <Input
+                                    id="user-name"
+                                    value={userName}
+                                    onChange={(e) => setUserName(e.target.value)}
+                                    placeholder="Введите ваше имя"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="user-phone">Номер телефона</Label>
+                                <Input
+                                    id="user-phone"
+                                    value={userPhone}
+                                    onChange={(e) => setUserPhone(e.target.value)}
+                                    placeholder="+7 (XXX) XXX-XX-XX"
+                                    required
+                                />
+                            </div>
+
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setIsAppointmentModalOpen(false)}
+                                >
+                                    Отмена
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="bg-blue-500 hover:bg-blue-600"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Создание записи...
+                                        </>
+                                    ) : (
+                                        "Записаться"
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
         </MainLayout>
     )
 }

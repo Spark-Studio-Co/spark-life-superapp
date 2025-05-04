@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, MapPin, Phone, Loader2 } from "lucide-react"
+import { Calendar, Clock, MapPin, Phone, Loader2, Building2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MainLayout } from "@/shared/ui/layout"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,6 +14,8 @@ import { ru } from "date-fns/locale"
 import { useAppointments } from "@/entities/appointments/hooks/use-appointment"
 import { AppointmentModal } from "@/entities/appointments/ui/appointment-modal"
 
+import { useNavigate } from "react-router-dom"
+
 // Временный список врачей для модального окна
 // В реальном приложении это должно приходить с API
 const doctors = [
@@ -24,13 +26,80 @@ const doctors = [
   { id: 5, name: "Др. Ольга Соколова", specialty: "Офтальмолог" },
 ]
 
+// Interface for local appointment data
+interface LocalAppointment {
+  id: string;
+  clinicName: string;
+  clinicAddress: string;
+  date: string;
+  time: string;
+  name: string;
+  phone: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  createdAt: string;
+}
+
+// Combined appointment type
+type CombinedAppointment = any | LocalAppointment;
+
 export const AppointmentsPage = () => {
+  const navigation = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("upcoming")
   const { userId } = useAuthData()
   const { useUserAppointments, cancelAppointment } = useAppointments()
+  const [localAppointments, setLocalAppointments] = useState<LocalAppointment[]>([])
+  const [combinedAppointments, setCombinedAppointments] = useState<CombinedAppointment[]>([])
+  const [isLocalLoading, setIsLocalLoading] = useState(true)
 
-  const { data: appointments, isLoading, isError, error } = useUserAppointments(Number(userId))
+  const { data: apiAppointments, isLoading: isApiLoading, isError, error } = useUserAppointments(Number(userId))
+
+  // Load local appointments from localStorage
+  useEffect(() => {
+    const loadLocalAppointments = () => {
+      setIsLocalLoading(true);
+      try {
+        const savedAppointments = localStorage.getItem('appointments');
+        if (savedAppointments) {
+          const parsedAppointments = JSON.parse(savedAppointments);
+          setLocalAppointments(parsedAppointments);
+        }
+      } catch (e) {
+        console.error('Error loading appointments from localStorage:', e);
+      } finally {
+        setIsLocalLoading(false);
+      }
+    };
+
+    loadLocalAppointments();
+  }, []);
+
+  // Combine API and local appointments
+  useEffect(() => {
+    const combined = [...(apiAppointments || [])]
+
+    // Convert local appointments to the same format as API appointments
+    const formattedLocalAppointments = localAppointments.map(local => {
+      // Create a date object from date and time
+      const [year, month, day] = local.date.split('-').map(Number);
+      const [hours, minutes] = local.time.split(':').map(Number);
+      const dateObj = new Date(year, month - 1, day, hours, minutes);
+
+      return {
+        id: local.id,
+        date: dateObj.toISOString(),
+        doctor: { name: "Клиника" },
+        location: local.clinicAddress,
+        clinicName: local.clinicName,
+        phone: local.phone,
+        userName: local.name,
+        status: local.status,
+        isLocal: true // Flag to identify local appointments
+      };
+    });
+
+    setCombinedAppointments([...combined, ...formattedLocalAppointments]);
+  }, [apiAppointments, localAppointments]);
 
   const formatAppointmentDate = (dateString: string) => {
     const date = parseISO(dateString)
@@ -50,15 +119,27 @@ export const AppointmentsPage = () => {
 
   // Разделяем записи на предстоящие и прошедшие
   const currentDate = new Date()
-  const upcomingAppointments = appointments?.filter((appointment: any) => new Date(appointment.date) >= currentDate) || []
+  const upcomingAppointments = combinedAppointments.filter((appointment) =>
+    new Date(appointment.date) >= currentDate
+  )
 
-  const pastAppointments = appointments?.filter((appointment: any) => new Date(appointment.date) < currentDate) || []
+  const pastAppointments = combinedAppointments.filter((appointment) =>
+    new Date(appointment.date) < currentDate
+  )
 
-  const handleCancelAppointment = async (id: number) => {
+  const handleCancelAppointment = async (id: number | string, isLocal = false) => {
     try {
-      await cancelAppointment.mutateAsync(id)
+      if (isLocal) {
+        // Handle local appointment cancellation
+        const updatedAppointments = localAppointments.filter(app => app.id !== id);
+        setLocalAppointments(updatedAppointments);
+        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+      } else {
+        // Handle API appointment cancellation
+        await cancelAppointment.mutateAsync(id as number);
+      }
     } catch (error) {
-      console.error("Failed to cancel appointment:", error)
+      console.error("Failed to cancel appointment:", error);
     }
   }
 
@@ -67,7 +148,7 @@ export const AppointmentsPage = () => {
       <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] px-4 pt-6 pb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-white">Записи к врачу</h1>
+            <h1 className="text-2xl font-bold text-white">Записи на прием</h1>
             <p className="text-blue-100">Управляйте своими медицинскими записями</p>
           </div>
         </div>
@@ -91,7 +172,7 @@ export const AppointmentsPage = () => {
           </TabsList>
 
           <TabsContent value="upcoming" className="space-y-4 mt-2">
-            {isLoading ? (
+            {(isApiLoading || isLocalLoading) ? (
               <div className="flex justify-center items-center py-10">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
               </div>
@@ -116,9 +197,12 @@ export const AppointmentsPage = () => {
                   >
                     <div className="p-4">
                       <h3 className="font-semibold text-lg">{appointment.doctor?.name || "Врач не указан"}</h3>
-                      <p className="text-gray-500 text-sm">
-                        {appointment.doctor?.specialty || "Специальность не указана"}
-                      </p>
+                      {appointment.clinicName && (
+                        <div className="flex items-center mt-1 text-sm text-gray-500">
+                          <Building2 className="h-4 w-4 mr-1 text-blue-500" />
+                          <span>{appointment.clinicName}</span>
+                        </div>
+                      )}
                       <div className="space-y-2 mt-3">
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="h-4 w-4 text-blue-500" />
@@ -140,6 +224,12 @@ export const AppointmentsPage = () => {
                             <span>{appointment.phone}</span>
                           </div>
                         )}
+                        {appointment.userName && (
+                          <div className="mt-2 text-sm bg-blue-50 p-2 rounded">
+                            <p className="font-medium">Имя пациента:</p>
+                            <p>{appointment.userName}</p>
+                          </div>
+                        )}
                         {appointment.description && (
                           <div className="mt-2 text-sm bg-blue-50 p-2 rounded">
                             <p className="font-medium">Описание:</p>
@@ -152,20 +242,17 @@ export const AppointmentsPage = () => {
                       <Button
                         variant="ghost"
                         className="flex-1 rounded-none py-2 h-auto text-sm"
-                        onClick={() => {
-                          // Здесь можно открыть модальное окно для переноса записи
-                          // с предзаполненными данными текущей записи
-                        }}
+                        onClick={() => navigation("/video-chat/1")}
                       >
-                        Перенести
+                        Перейти к звонку
                       </Button>
                       <Button
                         variant="ghost"
                         className="flex-1 rounded-none py-2 h-auto text-sm text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleCancelAppointment(appointment.id)}
-                        disabled={cancelAppointment.isPending}
+                        onClick={() => handleCancelAppointment(appointment.id, appointment.isLocal)}
+                        disabled={!appointment.isLocal && cancelAppointment.isPending}
                       >
-                        {cancelAppointment.isPending ? (
+                        {!appointment.isLocal && cancelAppointment.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                             Отмена...
@@ -182,7 +269,7 @@ export const AppointmentsPage = () => {
           </TabsContent>
 
           <TabsContent value="past" className="space-y-4 mt-2">
-            {isLoading ? (
+            {(isApiLoading || isLocalLoading) ? (
               <div className="flex justify-center items-center py-10">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
@@ -206,6 +293,12 @@ export const AppointmentsPage = () => {
                       <p className="text-gray-500 text-sm">
                         {appointment.doctor?.specialty || "Специальность не указана"}
                       </p>
+                      {appointment.clinicName && (
+                        <div className="flex items-center mt-1 text-sm text-gray-500">
+                          <Building2 className="h-4 w-4 mr-1 text-gray-400" />
+                          <span>{appointment.clinicName}</span>
+                        </div>
+                      )}
                       <div className="space-y-2 mt-3">
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="h-4 w-4 text-gray-400" />
@@ -215,6 +308,12 @@ export const AppointmentsPage = () => {
                           <Clock className="h-4 w-4 text-gray-400" />
                           <span>{formatAppointmentTime(appointment.date)}</span>
                         </div>
+                        {appointment.location && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-4 w-4 text-gray-400" />
+                            <span>{appointment.location}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="border-t p-2">
