@@ -90,7 +90,7 @@ export default function VideoChat() {
                 className="mt-4 h-14 w-full rounded-xl text-base font-semibold"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating meeting..." : "Join Meeting"}
+                {isLoading ? "Создать встречу..." : "Присоединиться"}
               </Button>
             </form>
           </div>
