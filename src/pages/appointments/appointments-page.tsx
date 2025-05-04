@@ -80,10 +80,6 @@ export const AppointmentsPage = () => {
   >({});
   const [isLatestPdfDownloading, setIsLatestPdfDownloading] = useState(false);
 
-  // URL для прямого открытия PDF-файла
-  const directPdfUrl =
-    "https://spark-life-backend-production-d81a.up.railway.app/uploads/audio_summary_1746389467875.pdf";
-
   const {
     data: apiAppointments,
     isLoading: isApiLoading,
@@ -325,13 +321,16 @@ export const AppointmentsPage = () => {
     }
   };
 
-  // Функция для открытия PDF по прямой ссылке
-  const handleOpenDirectPdf = () => {
+  // Функция для открытия PDF по динамической ссылке
+  const handleOpenDirectPdf = async () => {
     try {
       setIsLatestPdfDownloading(true);
 
+      // Получаем ссылку на последний PDF-отчет
+      const pdfUrl = await transcriptService.getLatestPdfUrl();
+
       // Открываем PDF в новой вкладке
-      window.open(directPdfUrl, "_blank");
+      window.open(pdfUrl, "_blank");
 
       toast({
         title: "Успешно",

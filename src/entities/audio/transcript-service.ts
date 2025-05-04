@@ -10,6 +10,10 @@ export interface TranscriptSummary {
   audio_url?: string;
 }
 
+export interface PdfResponse {
+  file_path: string;
+}
+
 export const transcriptService = {
   /**
    * Получение всех транскрипций по ID пациента или врача
@@ -57,22 +61,18 @@ export const transcriptService = {
     }
   },
 
-  // Добавляем новый метод для получения последнего PDF-отчета с транскрипцией
-  // Исправляем метод для получения последнего PDF-отчета с транскрипцией
-  // Меняем путь с "/transcript/last" на "/last"
-
   /**
-   * Скачивание последнего сгенерированного PDF-отчета с транскрипцией
+   * Получение ссылки на последний PDF-отчет с транскрипцией
    */
-  async downloadLatestPdfSummary(): Promise<Blob> {
+  async getLatestPdfUrl(): Promise<string> {
     try {
-      const response = await apiClient.get("/transcript/last", {
-        responseType: "blob",
-      });
-
-      return response.data;
+      const response = await apiClient.get<PdfResponse>("/transcript/last");
+      return response.data.file_path;
     } catch (error) {
-      console.error("Ошибка при скачивании последнего PDF-отчета:", error);
+      console.error(
+        "Ошибка при получении ссылки на последний PDF-отчет:",
+        error
+      );
       throw error;
     }
   },
