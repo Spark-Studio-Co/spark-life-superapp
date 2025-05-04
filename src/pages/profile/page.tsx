@@ -84,12 +84,19 @@ export const ProfilePage = () => {
       const reportUrl = response.data.urls[0];
 
       if (reportUrl) {
-        // Открываем URL в новой вкладке для скачивания
-        window.open(reportUrl, '_blank');
+        // Создаем ссылку для скачивания
+        const link = document.createElement('a');
+        link.href = reportUrl;
+        link.download = `Диагностика_${new Date().toLocaleDateString()}.pdf`;
+        
+        // Запускаем скачивание
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
         toast({
           title: "Успешно",
-          description: "Отчет диагностики открыт для скачивания",
+          description: "Отчет диагностики успешно скачан",
         });
       } else {
         toast({
@@ -360,8 +367,6 @@ export const ProfilePage = () => {
                     </Card>
                   </Link>
                 </motion.div>
-
-
               </motion.div>
             </>
           )}
