@@ -158,13 +158,64 @@ function MeetingView() {
     }
   };
 
+  // Interface for appointment data from localStorage
+  interface Appointment {
+    id: string;
+    clinicName: string;
+    clinicAddress: string;
+    date: string;
+    time: string;
+    name: string;
+    phone: string;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    createdAt: string;
+  }
+
   const handleLeaveMeeting = async () => {
     // Останавливаем запись перед выходом из встречи
     if (isRecording) {
       await stopRecording();
     }
+
+    // Получаем ID встречи из URL
+    const pathParts = window.location.pathname.split('/');
+    const appointmentId = pathParts[pathParts.length - 1];
+
+    // Обновляем статус записи в localStorage
+    const savedAppointments = localStorage.getItem('appointments');
+    if (savedAppointments && appointmentId) {
+      try {
+        const appointments = JSON.parse(savedAppointments) as Appointment[];
+        const updatedAppointments = appointments.map(app => {
+          if (app.id === appointmentId) {
+            // Создаем прошедшую дату (вчера), чтобы переместить в прошедшие записи
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            return {
+              ...app,
+              // Устанавливаем дату на вчера, чтобы она появилась в прошедших записях
+              date: yesterday.toISOString().split('T')[0],
+              status: 'completed' as any
+            };
+          }
+          return app;
+        });
+
+        // Сохраняем обновленные записи в localStorage
+        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+
+        toast({
+          title: "Звонок завершен",
+          description: "Запись перемещена в раздел прошедших приемов",
+        });
+      } catch (e) {
+        console.error('Error updating appointment status:', e);
+      }
+    }
+
     leave();
-    navigate("/");
+    navigate("/appointments");
   };
 
   const handleToggleMic = () => {
@@ -239,9 +290,8 @@ function MeetingView() {
                       <div className="flex items-center">
                         <Badge
                           variant="outline"
-                          className={`mr-2 border-white/30 bg-black/30 text-white ${
-                            isDoctor ? "text-primary" : "text-white"
-                          }`}
+                          className={`mr-2 border-white/30 bg-black/30 text-white ${isDoctor ? "text-primary" : "text-white"
+                            }`}
                         >
                           {isDoctor ? (
                             <>
@@ -292,9 +342,8 @@ function MeetingView() {
                     onClick={handleToggleMic}
                     variant="ghost"
                     size="icon"
-                    className={`h-12 w-12 rounded-full ${
-                      !isMicOn ? "bg-red-500/20 text-red-500" : "text-white"
-                    }`}
+                    className={`h-12 w-12 rounded-full ${!isMicOn ? "bg-red-500/20 text-red-500" : "text-white"
+                      }`}
                   >
                     {isMicOn ? (
                       <Mic className="h-6 w-6" />
@@ -307,9 +356,8 @@ function MeetingView() {
                     onClick={handleToggleWebcam}
                     variant="ghost"
                     size="icon"
-                    className={`h-12 w-12 rounded-full ${
-                      !isWebcamOn ? "bg-red-500/20 text-red-500" : "text-white"
-                    }`}
+                    className={`h-12 w-12 rounded-full ${!isWebcamOn ? "bg-red-500/20 text-red-500" : "text-white"
+                      }`}
                   >
                     {isWebcamOn ? (
                       <Video className="h-6 w-6" />
@@ -322,11 +370,10 @@ function MeetingView() {
                     onClick={toggleRecording}
                     variant="ghost"
                     size="icon"
-                    className={`h-12 w-12 rounded-full ${
-                      isRecording
+                    className={`h-12 w-12 rounded-full ${isRecording
                         ? "bg-green-500/20 text-green-500"
                         : "text-white"
-                    }`}
+                      }`}
                   >
                     <FileAudio className="h-6 w-6" />
                   </Button>
@@ -360,26 +407,6 @@ function MeetingView() {
             )}
           </>
         )}
-      </div>
-      <div className="border-t bg-card">
-        <Tabs
-          value={activeView}
-          onValueChange={(value) =>
-            setActiveView(value as "call" | "chat" | "health")
-          }
-        >
-          <TabsList className="grid w-full grid-cols-1">
-            <TabsTrigger value="call" className="py-3">
-              <div
-                className="flex flex-col items-center"
-                onClick={() => navigate("/")}
-              >
-                <LogOut className="mb-1 h-5 w-5 text-red-500" />
-                <span className="text-xs text-red-500">Выйти</span>
-              </div>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
     </div>
   );

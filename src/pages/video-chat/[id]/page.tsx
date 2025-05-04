@@ -2,11 +2,26 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heart } from "lucide-react";
 import MeetingRoom from "@/widgets/meeting-room/meeting-room";
+import { useNavigate, useParams } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+
+// Interface for appointment data from localStorage
+interface Appointment {
+  id: string;
+  clinicName: string;
+  clinicAddress: string;
+  date: string;
+  time: string;
+  name: string;
+  phone: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  createdAt: string;
+}
 
 export default function VideoChat() {
   const [meetingId, setMeetingId] = useState("o2ny-p68a-1c02");
@@ -14,6 +29,73 @@ export default function VideoChat() {
   const [joined, setJoined] = useState(false);
   const [authToken, setAuthToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Load user name from localStorage on component mount
+  useEffect(() => {
+    // Try to get the user's name from localStorage
+    const savedAppointments = localStorage.getItem('appointments');
+    if (savedAppointments) {
+      try {
+        const appointments = JSON.parse(savedAppointments) as Appointment[];
+        // Find the current appointment by ID if available
+        if (id) {
+          const currentAppointment = appointments.find(app => app.id === id);
+          if (currentAppointment) {
+            setName(currentAppointment.name);
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing appointments from localStorage:', e);
+      }
+    }
+  }, [id]);
+
+  // Handle call ending and update appointment status
+  const handleCallEnd = () => {
+    setCallEnded(true);
+
+    // Update the appointment status in localStorage
+    const savedAppointments = localStorage.getItem('appointments');
+    if (savedAppointments && id) {
+      try {
+        const appointments = JSON.parse(savedAppointments) as Appointment[];
+        const updatedAppointments = appointments.map(app => {
+          if (app.id === id) {
+            // Create a past date (yesterday) to move this to past appointments
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            return {
+              ...app,
+              // Set the date to yesterday to make it appear in past appointments
+              date: yesterday.toISOString().split('T')[0],
+              status: 'completed' as any
+            };
+          }
+          return app;
+        });
+
+        // Save updated appointments back to localStorage
+        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+
+        toast({
+          title: "Звонок завершен",
+          description: "Запись перемещена в раздел прошедших приемов",
+        });
+
+        // Navigate back to appointments page after a short delay
+        setTimeout(() => {
+          navigate('/appointments');
+        }, 2000);
+      } catch (e) {
+        console.error('Error updating appointment status:', e);
+      }
+    }
+  };
 
   const createMeeting = async () => {
     try {
@@ -95,12 +177,32 @@ export default function VideoChat() {
             </form>
           </div>
         </div>
+      ) : callEnded ? (
+        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+          <div className="mb-8 flex flex-col items-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-center text-2xl font-bold">Звонок завершен</h2>
+            <p className="mt-2 text-gray-500">Запись перемещена в раздел прошедших приемов</p>
+          </div>
+          <Button
+            onClick={() => navigate('/appointments')}
+            className="mt-4 h-14 w-full max-w-md rounded-xl text-base font-semibold"
+          >
+            Вернуться к записям
+          </Button>
+        </div>
       ) : (
-        <MeetingRoom
-          meetingId={meetingId}
-          participantName={name}
-          authToken={authToken}
-        />
+        <div className="relative">
+          <MeetingRoom
+            meetingId={meetingId}
+            participantName={name}
+            authToken={authToken}
+          />
+        </div>
       )}
     </main>
   );
