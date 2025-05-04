@@ -118,14 +118,9 @@ function MeetingView() {
     try {
       if (!isRecording) return;
 
-      // Проверяем, что у нас есть ID пациента и врача
-      if (patientIdRef.current === 0 || doctorIdRef.current === 0) {
-        throw new Error("ID пациента или врача не определены");
-      }
-
       const options: RecordingOptions = {
-        patientId: patientIdRef.current,
-        doctorId: doctorIdRef.current,
+        patientId: 1,
+        doctorId: 4,
       };
 
       const text = await audioRecorder.stopRecording(options);
