@@ -154,7 +154,7 @@ export default function SparkDoc() {
             }
 
             // Формируем объект для результата
-            const resultData: ResultData = {
+            let resultData: ResultData = {
                 id: item.id,
                 user_id: item.user_id,
                 image_url: item.image_url,
@@ -166,11 +166,48 @@ export default function SparkDoc() {
                 }
             }
 
-            // Если есть данные результата, используем их
-            if (item.result && item.result.result) {
-                resultData.result = item.result.result
+            // Проверяем структуру данных и используем их, если они есть
+            if (item.result) {
+                console.log('Processing result data:', item.result)
+                
+                // Проверяем различные варианты структуры JSON
+                
+                // Вариант 1: Данные из истории - вложенный объект result.result
+                if (item.result.result && typeof item.result.result === 'object') {
+                    resultData = {
+                        id: item.id,
+                        user_id: item.user_id,
+                        image_url: item.image_url,
+                        created_at: item.created_at,
+                        result: {
+                            advice: item.result.result.advice || '',
+                            status: item.result.result.status || 'Анализ документа',
+                            potential_diagnoses: Array.isArray(item.result.result.potential_diagnoses) ? 
+                                item.result.result.potential_diagnoses : [defaultDiagnosis]
+                        }
+                    }
+                    console.log('Using nested result structure (history format)')
+                } 
+                // Вариант 2: Прямой результат анализа - поля находятся непосредственно в item.result
+                else if (item.result.advice || item.result.status || (item.result.potential_diagnoses && Array.isArray(item.result.potential_diagnoses))) {
+                    resultData = {
+                        id: item.id,
+                        user_id: item.user_id,
+                        image_url: item.image_url,
+                        created_at: item.created_at,
+                        result: {
+                            advice: item.result.advice || '',
+                            status: item.result.status || 'Анализ документа',
+                            potential_diagnoses: Array.isArray(item.result.potential_diagnoses) ? 
+                                item.result.potential_diagnoses : [defaultDiagnosis]
+                        }
+                    }
+                    console.log('Using direct result structure (regular format)')
+                }
             }
 
+            console.log('Prepared result data for localStorage:', resultData)
+            
             // Сохраняем выбранный элемент истории в localStorage
             localStorage.removeItem('document_error')
             localStorage.setItem('document_result', JSON.stringify(resultData))
@@ -477,16 +514,18 @@ export default function SparkDoc() {
                                                     <div className="flex flex-col w-full">
                                                         <div>
                                                             <p className="text-white font-medium">
-                                                                {item.result?.potential_diagnoses &&
-                                                                    item.result?.potential_diagnoses[0].name}
+                                                                {item.result?.result?.potential_diagnoses?.[0]?.name || 
+                                                                 item.result?.potential_diagnoses?.[0]?.name || 
+                                                                 'Анализ документа'}
                                                             </p>
                                                             <p className="text-white/70 text-xs">{formatDate(item.created_at)}</p>
                                                         </div>
-                                                        {item.result?.status && (
-                                                            <div className={`mt-2 px-2 text-center py-1 rounded-full text-xs font-medium ${item.result.status.includes("отклонения")
-                                                                ? "bg-yellow-500/20 text-yellow-100"
-                                                                : "bg-green-500/20 text-green-100"}`}>
-                                                                {item.result?.status}
+                                                        {/* Проверяем статус в обоих возможных местах */}
+                                                        {(item.result?.result?.status || item.result?.status) && (
+                                                             <div className={`mt-2 px-2 text-center py-1 rounded-full text-xs font-medium ${(item.result?.result?.status || item.result?.status || '').includes("отклонения")
+                                                                 ? "bg-yellow-500/20 text-yellow-100"
+                                                                 : "bg-green-500/20 text-green-100"}`}>
+                                                                {item.result?.result?.status || item.result?.status}
                                                             </div>
                                                         )}
                                                     </div>

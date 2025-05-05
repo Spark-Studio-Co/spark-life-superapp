@@ -18,7 +18,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
-
+import { getClinicUrlByAnalysisType } from "@/entities/recommendet-clinics/use-recommended-clinics"
 interface AnalysisResult {
   anxiety_level: number;
   stress_level: number;
@@ -319,8 +319,7 @@ export function VoiceAnalysisResults() {
             >
               <Button
                 className="flex-1"
-                onClick={() => navigate(getClinicUrlByAnalysisType("sparkvoice"))}
-              >
+                onClick={() => navigate(getClinicUrlByAnalysisType("face"))}>
                 Записаться на прием
               </Button>
             </motion.div>
